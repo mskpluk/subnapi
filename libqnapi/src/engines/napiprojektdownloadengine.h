@@ -18,7 +18,6 @@
 #include "config/engineconfig.h"
 #include "engines/subtitledownloadengine.h"
 #include "utils/p7zipdecoder.h"
-
 #include <QSharedPointer>
 
 class NapiProjektDownloadEngine : public SubtitleDownloadEngine {
@@ -26,6 +25,7 @@ class NapiProjektDownloadEngine : public SubtitleDownloadEngine {
   NapiProjektDownloadEngine(
       const QString& tmpPath, const EngineConfig& config,
       const QSharedPointer<const P7ZipDecoder>& p7zipDecoder);
+
   ~NapiProjektDownloadEngine();
 
   static SubtitleDownloadEngineMetadata metadata;
@@ -43,6 +43,9 @@ class NapiProjektDownloadEngine : public SubtitleDownloadEngine {
 
   static bool checkUser(const QString& nick, const QString& pass);
 
+  // Download by hash using the XML API (mode 17)
+  bool downloadFromHashXml(const QString& hash, const QString& lang, const QString& outputPath);
+
  private:
   EngineConfig engineConfig;
   QSharedPointer<const P7ZipDecoder> p7zipDecoder;
@@ -53,6 +56,12 @@ class NapiProjektDownloadEngine : public SubtitleDownloadEngine {
   QString npFDigest(const QString& input) const;
   QString npLangWrapper(QString lang) const;
   QString napiOS() const;
+
+  // Helper methods for downloading by hash
+  QString normalizeHash(const QString& hash) const;
+  QString downloadXmlForHash(const QString& hash, const QString& lang) const;
+  QString extractSubtitlesFromXml(const QString& xmlContent,
+                                  const QString& hash) const;
 };
 
 #endif

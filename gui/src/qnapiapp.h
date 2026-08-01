@@ -21,6 +21,8 @@
 
 #include "forms/frmabout.h"
 #include "forms/frmconvert.h"
+#include "forms/frmnapiprojektscan.h"
+#include "forms/frmnapiprojektupload.h"
 #include "forms/frmoptions.h"
 #include "forms/frmprogress.h"
 #include "forms/frmscan.h"
@@ -57,6 +59,8 @@ class QNapiApp : public QSingleApplication {
   void showConvertDialog();
   void showCreateAccount(const QString &engineName) const;
   void showOSUploadDialog() const;
+  void showNapiProjektUploadDialog(bool correction);
+  void showNapiProjektScanDialog();
   void showSettings();
   void showAbout();
   void tryQuit();
@@ -70,6 +74,7 @@ class QNapiApp : public QSingleApplication {
   QSystemTrayIcon *trayIcon;
   QMenu *trayIconMenu, *napiSubMenu, *osSubMenu, *napisy24SubMenu;
   QAction *getAction, *scanAction, *convertAction, *napiGetAction,
+      *napiUploadAction, *napiCorrectAction, *napiScanUploadAction,
       *napiCreateUserAction, *osGetAction, *osAddAction, *osCreateUserAction,
       *napisy24GetAction, *napisy24CreateUserAction, *settingsAction,
       *aboutAction, *quitAction;

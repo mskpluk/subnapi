@@ -14,7 +14,6 @@
 
 #include "downloadsubtitlesargparser.h"
 #include "qnapicommand.h"
-
 #include <QFileInfo>
 
 DownloadSubtitlesArgParser::DownloadSubtitlesArgParser() {}
@@ -24,6 +23,12 @@ QVariant DownloadSubtitlesArgParser::parse(const QStringList& args,
   QStringList filePaths;
 
   foreach (QString arg, args) {
+    // Handle napiprojekt: links
+    if (arg.startsWith("napiprojekt:", Qt::CaseInsensitive)) {
+      filePaths << arg;
+      continue;
+    }
+
     if (QFileInfo(arg).isFile()) {
       filePaths << arg;
       continue;

@@ -15,6 +15,7 @@
 #ifndef SUBTITLEINFO_H
 #define SUBTITLEINFO_H
 
+#include <QList>
 #include <QMetaType>
 #include <QUuid>
 

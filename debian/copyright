@@ -1,13 +1,19 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: qnapi
-Source: https://qnapi.github.io
- 
+Upstream-Name: subnapi
+Source: https://github.com/mskpluk/subnapi
+Comment:
+ This is a fork of the original QNapi project by Piotr Krzemiński
+ (https://github.com/QNapi/qnapi), whose upstream has had no activity
+ since 2022.
+
 Files: *
 Copyright: 2008-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
+           2026 mskpluk
 License: GPL-2.0+
 
 Files: debian/*
 Copyright: 2016-2017 Piotr Krzemiński <pio.krzeminski@gmail.com>
+           2026 mskpluk
 License: GPL-2.0+
 
 License: GPL-2.0+
@@ -26,8 +32,3 @@ License: GPL-2.0+
  .
  On Debian systems, the complete text of the GNU General
  Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
-# Please avoid picking licenses with terms that are more restrictive than the
-# packaged work, as it may make Debian's contributions unacceptable upstream.

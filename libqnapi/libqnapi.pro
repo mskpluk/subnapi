@@ -7,7 +7,7 @@ TEMPLATE = lib
 CONFIG += staticlib \
           warn_on \
           silent \
-          c++11
+          c++17
 
 DESTDIR = $$PWD
 
@@ -30,6 +30,7 @@ SOURCES += src/config/configreader.cpp \
     src/config/scanconfig.cpp \
     src/config/staticconfig.cpp \
     src/engines/napiprojektdownloadengine.cpp \
+    src/engines/napiprojektuploadengine.cpp \
     src/engines/napisy24downloadengine.cpp \
     src/engines/opensubtitlesdownloadengine.cpp \
     src/engines/subtitledownloadengine.cpp \
@@ -49,7 +50,11 @@ SOURCES += src/config/configreader.cpp \
     src/subtitlepostprocessor.cpp \
     src/utils/console.cpp \
     src/utils/encodingutils.cpp \
+    src/utils/filehash.cpp \
+    src/utils/legacycodecs.cpp \
     src/utils/p7zipdecoder.cpp \
+    src/utils/subtitleauthordetector.cpp \
+    src/utils/subtitlefinder.cpp \
     src/utils/synchttp.cpp \
     src/utils/syncxmlrpc.cpp \
     src/qnapi.cpp \
@@ -68,6 +73,8 @@ SOURCES += src/config/configreader.cpp \
     src/parser/showoptionsargparser.cpp \
     src/parser/runcliappargparser.cpp \
     src/parser/scandirectoryargparser.cpp \
+    src/parser/uploadsubtitlesargparser.cpp \
+    src/parser/correctsubtitlesargparser.cpp \
     src/utils/helphelper.cpp
 
 
@@ -80,6 +87,7 @@ HEADERS += src/config/configreader.h \
     src/config/scanconfig.h \
     src/config/staticconfig.h \
     src/engines/napiprojektdownloadengine.h \
+    src/engines/napiprojektuploadengine.h \
     src/engines/napisy24downloadengine.h \
     src/engines/opensubtitlesdownloadengine.h \
     src/engines/subtitledownloadengine.h \
@@ -103,7 +111,11 @@ HEADERS += src/config/configreader.h \
     src/subtitlepostprocessor.h \
     src/utils/console.h \
     src/utils/encodingutils.h \
+    src/utils/filehash.h \
+    src/utils/legacycodecs.h \
     src/utils/p7zipdecoder.h \
+    src/utils/subtitleauthordetector.h \
+    src/utils/subtitlefinder.h \
     src/utils/synchttp.h \
     src/utils/syncxmlrpc.h \
     src/version.h \
@@ -125,18 +137,8 @@ HEADERS += src/config/configreader.h \
     src/parser/showoptionsargparser.h \
     src/parser/runcliappargparser.h \
     src/parser/scandirectoryargparser.h \
+    src/parser/uploadsubtitlesargparser.h \
+    src/parser/correctsubtitlesargparser.h \
     src/utils/helphelper.h
 
-unix:!macx {
-    PKGCONFIG += libmediainfo
-}
-
-macx {
-    INCLUDEPATH += ../deps/libmediainfo/include
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
-    QMAKE_CXXFLAGS_X86_64 = -mmacosx-version-min=10.8
-}
-
-win32 {
-    INCLUDEPATH += ../deps/libmediainfo/include
-}
+PKGCONFIG += libmediainfo

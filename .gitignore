@@ -4,15 +4,11 @@ build
 debug
 release
 Makefile*
-qnapi
-qnapic
+subnapi
+subnapic
 *.a
-win32/out/*
-win32/*.exe
 *.Debug
 *.Release
-*.app
-*.dmg
 .DS_Store
 .qmake.stash
 doc/doxygen/*

@@ -25,9 +25,11 @@
 #include "parser/formatargparser.h"
 #include "parser/langargparser.h"
 #include "parser/quietbatchargparser.h"
+#include "parser/correctsubtitlesargparser.h"
 #include "parser/showhelpargparser.h"
 #include "parser/showhelplanguagesargparser.h"
 #include "parser/showlistargparser.h"
+#include "parser/uploadsubtitlesargparser.h"
 #include "qnapicommand.h"
 #include "utils/console.h"
 
@@ -57,6 +59,8 @@ int main(int argc, char **argv) {
       QSharedPointer<CliArgParser>(new BackupLangArgParser()),
       QSharedPointer<CliArgParser>(new FormatArgParser()),
       QSharedPointer<CliArgParser>(new ExtensionArgParser()),
+      QSharedPointer<CliArgParser>(new UploadSubtitlesArgParser()),
+      QSharedPointer<CliArgParser>(new CorrectSubtitlesArgParser()),
       QSharedPointer<CliArgParser>(new DownloadSubtitlesArgParser())};
 
   QStringList tailArgs =

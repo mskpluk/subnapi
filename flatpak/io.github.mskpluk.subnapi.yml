@@ -1,0 +1,98 @@
+app-id: io.github.mskpluk.subnapi
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+command: subnapi
+
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  # napiprojekt.pl / opensubtitles.org / napisy24.pl
+  - --share=network
+  # movie collections commonly live on external drives, so plain
+  # --filesystem=home would not be enough
+  - --filesystem=host
+  # desktop notifications
+  - --talk-name=org.freedesktop.Notifications
+  # tray icon (StatusNotifierItem)
+  - --talk-name=org.kde.StatusNotifierWatcher
+
+modules:
+  # 7-Zip CLI (7za): the app shells out to it to unpack downloaded
+  # subtitles and to create upload archives; the KDE runtime does not
+  # ship one. Found at runtime via PATH (/app/bin).
+  - name: p7zip
+    buildsystem: simple
+    build-commands:
+      - make -j $FLATPAK_BUILDER_N_JOBS 7za
+      - install -Dm755 bin/7za /app/bin/7za
+    sources:
+      - type: archive
+        url: https://github.com/p7zip-project/p7zip/archive/refs/tags/v17.05.tar.gz
+        sha256: d2788f892571058c08d27095c22154579dfefb807ebe357d145ab2ddddefb1a6
+
+  # libzen + libmediainfo: movie metadata (dimensions, duration, fps);
+  # not part of the KDE runtime.
+  - name: libzen
+    buildsystem: cmake-ninja
+    subdir: Project/CMake
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_SHARED_LIBS=ON
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/MediaArea/ZenLib/archive/refs/tags/v0.4.41.tar.gz
+        sha256: 45d5173fa0278f5264daa6836ae297aa303984482227d00b35c4f03929494c8f
+    cleanup:
+      - /bin
+      - /include
+      - /lib/cmake
+      - /lib/pkgconfig
+
+  - name: libmediainfo
+    buildsystem: cmake-ninja
+    subdir: Project/CMake
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_SHARED_LIBS=ON
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: archive
+        url: https://github.com/MediaArea/MediaInfoLib/archive/refs/tags/v25.04.tar.gz
+        sha256: 31cb4adfdce59fe6afe87d5fb629121008932f81c49b58d027317688fd24de72
+    cleanup:
+      - /bin
+      - /include
+      - /lib/cmake
+      - /lib/pkgconfig
+
+  - name: subnapi
+    buildsystem: simple
+    build-commands:
+      # The dir source copies the working tree as-is, including any qmake
+      # artifacts from a host build (Makefiles recording host tool paths,
+      # .qmake.stash, object dirs) - remove them so qmake reconfigures
+      # cleanly for the sandbox.
+      - rm -rf Makefile .qmake.stash libqnapi/Makefile gui/Makefile cli/Makefile
+        libqnapi/tmp gui/tmp cli/tmp libqnapi/libqnapi.a subnapi src/subnapic
+      - sh -c 'command -v qmake6 >/dev/null 2>&1 && qmake6 PREFIX=/app || qmake PREFIX=/app'
+      - make -j $FLATPAK_BUILDER_N_JOBS
+      - make install
+      # Flatpak requires exported files to be named after the app id.
+      - install -Dm644 flatpak/io.github.mskpluk.subnapi.metainfo.xml
+        /app/share/metainfo/io.github.mskpluk.subnapi.metainfo.xml
+      - mv /app/share/applications/subnapi.desktop
+        /app/share/applications/io.github.mskpluk.subnapi.desktop
+      - sed -i 's/^Icon=subnapi$/Icon=io.github.mskpluk.subnapi/'
+        /app/share/applications/io.github.mskpluk.subnapi.desktop
+      - mv /app/share/applications/subnapi-uri.desktop
+        /app/share/applications/io.github.mskpluk.subnapi.uri.desktop
+      - sh -c 'for s in 16 32 48 128 512; do
+        d=/app/share/icons/hicolor/${s}x${s}/apps;
+        mv $d/subnapi.png $d/io.github.mskpluk.subnapi.png; done'
+    sources:
+      - type: dir
+        path: ..

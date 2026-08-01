@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/icon">
-        <file alias="qnapi.png">qnapi.png</file>
-        <file alias="qnapi@2x.png">qnapi@2x.png</file>
+        <file alias="subnapi.png">subnapi.png</file>
+        <file alias="subnapi@2x.png">subnapi@2x.png</file>
         <file alias="napiprojekt.jpg">engines/napiprojekt.jpg</file>
         <file alias="napiprojekt@2x.jpg">engines/napiprojekt@2x.jpg</file>
         <file alias="napisy24.gif">engines/napisy24.gif</file>
@@ -55,7 +55,7 @@
         <file alias="exclamation.png">ui/exclamation.png</file>
     </qresource>
     <qresource prefix="/translations">
-        <file alias="qnapi_it.qm">../../translations/qnapi_it.qm</file>
-        <file alias="qnapi_pl.qm">../../translations/qnapi_pl.qm</file>
+        <file alias="subnapi_it.qm">../../translations/subnapi_it.qm</file>
+        <file alias="subnapi_pl.qm">../../translations/subnapi_pl.qm</file>
     </qresource>
 </RCC>

@@ -17,7 +17,7 @@
 #include "frmlistsubtitles.h"
 #include "subdatawidget.h"
 
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QMessageBox>
 #include <QtWidgets/QHeaderView>
 
@@ -27,7 +27,7 @@ frmListSubtitles::frmListSubtitles(QWidget *parent, Qt::WindowFlags f)
   ui.setupUi(this);
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 }
 

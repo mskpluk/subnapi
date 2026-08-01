@@ -14,7 +14,7 @@
 
 #include "subtitleconverter.h"
 #include <QFile>
-#include <QTextStream>
+#include <QRegularExpression>
 #include <cmath>
 #include "libqnapi.h"
 #include "movieinfo/movieinfoprovider.h"
@@ -141,11 +141,11 @@ bool SubtitleConverter::convertSubtitles(QString subtitleFile,
   }
 
   if (!skipConvertAds && !sf.entries.isEmpty()) {
-    SubToken stQNapi;
-    stQNapi.type = STT_WORD;
-    stQNapi.payload = "QNapi";
+    SubToken stSubnapi;
+    stSubnapi.type = STT_WORD;
+    stSubnapi.payload = "Subnapi";
 
-    if (!sf.entries.last().tokens.contains(stQNapi)) {
+    if (!sf.entries.last().tokens.contains(stSubnapi)) {
       SubEntry adEntry;
       if (targetFormat->isTimeBased()) {
         adEntry.frameStart = sf.entries.back().frameStop + 2000L;
@@ -154,7 +154,7 @@ bool SubtitleConverter::convertSubtitles(QString subtitleFile,
         adEntry.frameStart = sf.entries.back().frameStop + 50L;
         adEntry.frameStop = adEntry.frameStart + 200L;
       }
-      QString ad = QObject::tr("Subtitles downloaded and processed by QNapi|");
+      QString ad = QObject::tr("Subtitles downloaded and processed by Subnapi|");
       adEntry.tokens = targetFormat->decodeTokenStream(ad);
       SubToken urlToken;
       urlToken.type = STT_WORD;
@@ -181,27 +181,38 @@ QStringList SubtitleConverter::readFile(const QString &filename,
                                         QString encoding,
                                         long atMostLines) const {
   QStringList buff;
-  long current = 0;
   QFile inputFile(filename);
-  if (inputFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    QTextStream in(&inputFile);
-    in.setCodec(qPrintable(encoding));
-    while (!in.atEnd() && (atMostLines == 0 || current < atMostLines)) {
-      buff += in.readLine();
-      ++current;
-    }
+  if (inputFile.open(QIODevice::ReadOnly)) {
+    EncodingUtils eu;
+    Maybe<QString> contentOpt = eu.decode(encoding, inputFile.readAll());
     inputFile.close();
+
+    if (!contentOpt) return buff;
+    QString content = contentOpt.value();
+
+    QStringList lines = content.split(QRegularExpression("\r\n|\n|\r"));
+    if (!lines.isEmpty() && lines.last().isEmpty() &&
+        (content.endsWith('\n') || content.endsWith('\r'))) {
+      lines.removeLast();
+    }
+
+    buff = atMostLines > 0 ? lines.mid(0, atMostLines) : lines;
   }
   return buff;
 }
 
 bool SubtitleConverter::writeFile(const QString &filename, QString encoding,
                                   const QStringList &lines) const {
+  QString content;
+  foreach (QString line, lines) { content += line + "\n"; }
+
+  EncodingUtils eu;
+  Maybe<QByteArray> encoded = eu.encode(encoding, content);
+  if (!encoded) return false;
+
   QFile outputFile(filename);
-  if (outputFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    QTextStream out(&outputFile);
-    out.setCodec(qPrintable(encoding));
-    foreach (QString line, lines) { out << line << "\n"; }
+  if (outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    outputFile.write(encoded.value());
     outputFile.close();
     return true;
   } else {

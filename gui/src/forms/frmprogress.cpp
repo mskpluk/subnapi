@@ -14,7 +14,7 @@
 
 #include "frmprogress.h"
 #include <QCloseEvent>
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -47,7 +47,7 @@ frmProgress::frmProgress(QWidget *parent, Qt::WindowFlags f)
   connect(&getThread, SIGNAL(finished()), this, SLOT(downloadFinished()));
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 }
 
@@ -104,7 +104,7 @@ bool frmProgress::download(const QNapiConfig &config) {
 
   if (!isVisible()) {
     QRect position = frameGeometry();
-    position.moveCenter(QDesktopWidget().availableGeometry().center());
+    position.moveCenter(screen()->availableGeometry().center());
     move(position.topLeft());
     show();
   }
@@ -130,10 +130,10 @@ void frmProgress::updateProgress(int current, int all, float stageProgress) {
   if (stageProgress >= 0) lastStageProgress = stageProgress;
 
   QString windowTitle =
-      (lastAll > 1) ? QString(tr("QNapi - downloading subtitles (%1/%2)"))
+      (lastAll > 1) ? QString(tr("Subnapi - downloading subtitles (%1/%2)"))
                           .arg(lastCurrent + 1)
                           .arg(lastAll)
-                    : QString(tr("QNapi - downloading subtitles..."));
+                    : QString(tr("Subnapi - downloading subtitles..."));
   setWindowTitle(windowTitle);
 
   ui.pbProgress->setMaximum(lastAll * 100);
@@ -184,7 +184,7 @@ void frmProgress::downloadFinished() {
 void frmProgress::closeEvent(QCloseEvent *event) {
   if (getThread.isRunning()) {
     if (QMessageBox::question(
-            this, tr("QNapi"),
+            this, tr("Subnapi"),
             tr("Do you want to cancel subtitles downloading?"),
             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
       mutex.lock();

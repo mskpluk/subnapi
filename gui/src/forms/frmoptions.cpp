@@ -28,10 +28,6 @@
 
 #include <QLocale>
 
-#ifdef Q_OS_MAC
-#include "utils/infoplistdockicon.h"
-#endif
-
 frmOptions::frmOptions(QWidget *parent, Qt::WindowFlags f)
     : QDialog(parent, f),
       subtitleFormatsRegistry(LibQNapi::subtitleFormatsRegistry()),
@@ -47,20 +43,7 @@ frmOptions::frmOptions(QWidget *parent, Qt::WindowFlags f)
                                Qt::UserRole);
   ui.lbUiLangChangeNotice->setVisible(false);
 
-#ifdef Q_OS_MAC
-  ui.cbQuietBatch->hide();
-#endif
-
-#ifndef Q_OS_MAC
   ui.cbShowDockIcon->hide();
-#endif
-
-#ifdef Q_OS_WIN
-  ui.cbChangePermissions->hide();
-  ui.sbOPerm->hide();
-  ui.sbGPerm->hide();
-  ui.sbUPerm->hide();
-#endif
 
   QString tlcode;
   ui.cbLangBackup->addItem("None", QVariant(""));
@@ -99,20 +82,18 @@ frmOptions::frmOptions(QWidget *parent, Qt::WindowFlags f)
           SLOT(encodingMethodChanged(int)));
   connect(ui.cbAutoDetectEncoding, SIGNAL(clicked()), this,
           SLOT(autoDetectEncodingClicked()));
-  connect(ui.cbShowAllEncodings, SIGNAL(clicked()), this,
-          SLOT(showAllEncodingsClicked()));
 
   connect(ui.pbRestoreDefaults, SIGNAL(clicked()), this,
           SLOT(restoreDefaults()));
 
-  showAllEncodings();
+  populateEncodings();
 
   foreach (QString format, subtitleFormatsRegistry->listFormatNames()) {
     ui.cbSubFormat->addItem(format);
   }
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 }
 
@@ -272,7 +253,6 @@ void frmOptions::encodingMethodChanged(int method) {
   ui.lbConvertFrom->setEnabled(enableEncodingSettings);
   ui.cbEncTo->setEnabled(enableEncodingSettings);
   ui.cbAutoDetectEncoding->setEnabled(enableEncodingSettings);
-  ui.cbShowAllEncodings->setEnabled(enableEncodingSettings);
   autoDetectEncodingClicked();
 }
 
@@ -284,49 +264,23 @@ void frmOptions::autoDetectEncodingClicked() {
   ui.lbConvertFrom->setEnabled(checkedCE && !checkedADE);
 }
 
-void frmOptions::showAllEncodingsClicked() {
-  QString encFrom = ui.cbEncFrom->currentText();
-  QString encTo = ui.cbEncTo->currentText();
-
-  if (ui.cbShowAllEncodings->isChecked()) {
-    showAllEncodings();
-  } else {
-    ui.cbEncFrom->clear();
-    ui.cbEncTo->clear();
-
-    QStringList codecs;
-    codecs << "windows-1250"
-           << "windows-1257"
-           << "ISO-8859-2"
-           << "ISO-8859-13"
-           << "ISO-8859-16"
-           << "UTF-8";
-
-    ui.cbEncFrom->addItems(codecs);
-    ui.cbEncTo->addItems(codecs);
-  }
-
-  ui.cbEncFrom->setCurrentIndex(ui.cbEncFrom->findText(encFrom));
-  ui.cbEncTo->setCurrentIndex(ui.cbEncTo->findText(encTo));
-}
-
-void frmOptions::showAllEncodings() {
+void frmOptions::populateEncodings() {
   ui.cbEncFrom->clear();
   ui.cbEncTo->clear();
 
-  QList<QByteArray> codecs = QTextCodec::availableCodecs();
-  qSort(codecs.begin(), codecs.end());
-  for (QList<QByteArray>::iterator i = codecs.begin(); i != codecs.end(); i++) {
-    ui.cbEncFrom->addItem(*i);
-    ui.cbEncTo->addItem(*i);
-  }
+  QStringList codecs;
+  codecs << "windows-1250"
+         << "windows-1257"
+         << "ISO-8859-2"
+         << "ISO-8859-13"
+         << "ISO-8859-16"
+         << "UTF-8";
+
+  ui.cbEncFrom->addItems(codecs);
+  ui.cbEncTo->addItems(codecs);
 }
 
 void frmOptions::writeConfig() {
-#ifdef Q_OS_MAC
-  InfoPlistDockIcon::setShowDockIcon(ui.cbShowDockIcon->isChecked());
-#endif
-
   const QNapiConfig config = LibQNapi::loadConfig();
 
   QString permissions = QString("%1%2%3")
@@ -353,7 +307,9 @@ void frmOptions::writeConfig() {
           .setDownloadPolicy(
               static_cast<DownloadPolicy>(ui.cbDownloadPolicy->currentIndex()))
           .setChangePermissionsEnabled(ui.cbChangePermissions->isChecked())
-          .setChangePermissionsTo(permissions);
+          .setChangePermissionsTo(permissions)
+          .setDesktopNotificationsEnabled(
+              ui.cbDesktopNotifications->isChecked());
 
   QList<QPair<QString, bool> > updatedEnabledEngines;
   for (int i = 0; i < ui.twEngines->rowCount(); ++i) {
@@ -378,7 +334,6 @@ void frmOptions::writeConfig() {
           .setEncodingAutoDetectFrom(ui.cbAutoDetectEncoding->isChecked())
           .setEncodingFrom(ui.cbEncFrom->currentText())
           .setEncodingTo(ui.cbEncTo->currentText())
-          .setShowAllEncodings(ui.cbShowAllEncodings->isChecked())
           .setRemoveLines(ui.cbRemoveLines->isChecked())
           .setRemoveLinesWords(ui.teRemoveLinesWords->toPlainText().split("\n"))
           .setSubFormat(targetSubFormat)
@@ -394,10 +349,6 @@ void frmOptions::writeConfig() {
 }
 
 void frmOptions::readConfig(const QNapiConfig &config) {
-#ifdef Q_OS_MAC
-  ui.cbShowDockIcon->setChecked(InfoPlistDockIcon::readShowDockIcon());
-#endif
-
   QString systemLang = QLocale::languageToString(QLocale::system().language());
   QString localizedSystemLang = QCoreApplication::translate(
       "frmOptions", systemLang.toStdString().data());
@@ -420,6 +371,8 @@ void frmOptions::readConfig(const QNapiConfig &config) {
       SubtitleLanguage(config.generalConfig().backupLanguage()).toTwoLetter()));
   ui.cbNoBackup->setChecked(config.generalConfig().noBackup());
   ui.cbQuietBatch->setChecked(config.generalConfig().quietBatch());
+  ui.cbDesktopNotifications->setChecked(
+      config.generalConfig().desktopNotificationsEnabled());
 
   ui.twEngines->clear();
 
@@ -453,8 +406,6 @@ void frmOptions::readConfig(const QNapiConfig &config) {
       ui.cbEncFrom->findText(config.postProcessingConfig().encodingFrom()));
   ui.cbEncTo->setCurrentIndex(
       ui.cbEncTo->findText(config.postProcessingConfig().encodingTo()));
-  ui.cbShowAllEncodings->setChecked(
-      config.postProcessingConfig().showAllEncodings());
   ui.cbRemoveLines->setChecked(
       config.postProcessingConfig().removeLines());
   ui.teRemoveLinesWords->setText(
@@ -489,7 +440,6 @@ void frmOptions::readConfig(const QNapiConfig &config) {
 
   encodingMethodChanged(
       static_cast<int>(config.postProcessingConfig().encodingChangeMethod()));
-  showAllEncodingsClicked();
 
   ui.gbPpEnable->setChecked(config.postProcessingConfig().enabled());
 }
@@ -499,10 +449,6 @@ void frmOptions::restoreDefaults() {
   settings.clear();
   const QNapiConfig defaultConfig =
       LibQNapi::configReader()->readConfig(settings);
-
-#ifdef Q_OS_MAC
-  InfoPlistDockIcon::setShowDockIcon(true);
-#endif
 
   readConfig(defaultConfig);
 }

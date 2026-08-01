@@ -1,7 +1,50 @@
-QNapi ChangeLog:
-================
+Subnapi ChangeLog:
+==================
 
-2017-05-19 v0.2.3:
+2026-08-01 v0.5.0:
+ First Subnapi release. Subnapi is a Linux-only fork of QNapi
+ (https://github.com/QNapi/qnapi, inactive upstream since 2022).
+ Changes against the original QNapi:
+
+ Added:
+ * NapiProjekt subtitle upload and correction support, removed from
+   QNapi in 0.2.2 when the old API died, reimplemented against the
+   current NapiProjekt API:
+   - upload dialog for new subtitles and corrections (GUI)
+   - directory scan-and-review flow: scan a folder for movies with
+     local subtitles, check which are missing from NapiProjekt's
+     database and send the selected ones in one batch (GUI)
+   - -u/--upload and -r/--correct switches, with -a/--author and
+     -m/--comment, in the command-line client (subnapic)
+ * napiprojekt: URI scheme handler - clicking a napiprojekt: link in
+   a browser downloads subtitles by hash straight into the player
+ * desktop notifications (DBus, with tray fallback) and a settings
+   toggle for them
+ * Flatpak packaging (flatpak/, scripts/build-flatpak.sh)
+ * reproducible Debian package build script pinned to Debian 13
+   (scripts/build-deb-trixie.sh, rootless Podman)
+ * new application artwork
+
+ Changed:
+ * ported from Qt5 to Qt6
+ * Linux-only: dropped Windows/macOS support, packaging and bundled
+   prebuilt binaries
+ * modernized Debian packaging (debhelper 13, qmake6 buildsystem)
+ * de-submoduled deps/libmaia and deps/qt-maybe so release tarballs
+   are actually buildable
+ * configuration migrates automatically from ~/.config/qnapi.ini to
+   ~/.config/subnapi.ini (the original file is left untouched)
+ * updated Polish translations (complete)
+
+ Fixed:
+ * UTF-16 LE subtitle processing
+ * encoding detection when downloading subtitles via napiprojekt: links
+ * napiprojekt: hash download occasionally returning the content of an
+   unrelated file left in the system temp directory
+ * download process not starting (pending upstream fix from QNapi
+   PR #188, by a-sum-duma)
+
+2017-05-19 v0.2.3-1:
  * mozliwosc wyboru jezyka interfejsu uzytkownika (angielski/polski/włoski) - (thx Fincer, luigino)
  * przebudowany podsystem konfiguracji aplikacji
  * podzial aplikacji na biblioteke (libqnapi) i interfejs uzytkownika (gui)

@@ -17,7 +17,7 @@
 
 #include "subdatawidget.h"
 
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QListWidget>
 
 frmSummary::frmSummary(QWidget *parent, Qt::WindowFlags f)
@@ -27,7 +27,7 @@ frmSummary::frmSummary(QWidget *parent, Qt::WindowFlags f)
   setAttribute(Qt::WA_QuitOnClose, false);
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 }
 

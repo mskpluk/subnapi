@@ -13,7 +13,7 @@
 *****************************************************************************/
 
 #include <QDesktopServices>
-#include <QDesktopWidget>
+#include <QScreen>
 
 #include "engines/napiprojektdownloadengine.h"
 #include "frmnapiprojektconfig.h"
@@ -32,7 +32,7 @@ frmNapiProjektConfig::frmNapiProjektConfig(const EngineConfig &config,
   connect(ui.pbRegister, SIGNAL(clicked()), this, SLOT(pbRegisterClicked()));
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 }
 

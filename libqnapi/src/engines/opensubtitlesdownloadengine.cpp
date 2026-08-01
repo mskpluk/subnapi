@@ -16,6 +16,7 @@
 #include "subtitlelanguage.h"
 
 #include <QDir>
+#include <QRegularExpression>
 
 namespace OpenSubtitlesDownloadEngineConst {
 const QString openSubtitlesXmlRpcUrl = "http://api.opensubtitles.org/xml-rpc";
@@ -117,10 +118,12 @@ bool OpenSubtitlesDownloadEngine::lookForSubtitles(QString lang) {
                QFileInfo(responseMap["SubFileName"].toString())
                    .completeBaseName()) {
       r = SUBTITLE_GOOD;
-    } else if (QRegExp(QString("^%1").arg(
-                           responseMap["MovieReleaseName"].toString()),
-                       Qt::CaseInsensitive)
-                   .exactMatch(QFileInfo(movie).completeBaseName())) {
+    } else if (QRegularExpression(
+                   QString("^%1$").arg(
+                       responseMap["MovieReleaseName"].toString()),
+                   QRegularExpression::CaseInsensitiveOption)
+                   .match(QFileInfo(movie).completeBaseName())
+                   .hasMatch()) {
       r = SUBTITLE_GOOD;
     }
 

@@ -1,6 +1,6 @@
 <RCC>
    <qresource prefix="/translations">
-        <file alias="qnapi_it.qm">../../translations/qnapi_it.qm</file>
-        <file alias="qnapi_pl.qm">../../translations/qnapi_pl.qm</file>
+        <file alias="subnapi_it.qm">../../translations/subnapi_it.qm</file>
+        <file alias="subnapi_pl.qm">../../translations/subnapi_pl.qm</file>
     </qresource>
 </RCC>

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Subnapi URI Handler
+Exec=subnapi %u
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/napiprojekt;

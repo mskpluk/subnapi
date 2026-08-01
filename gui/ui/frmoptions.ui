@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QNapi - Settings</string>
+   <string>Subnapi - Settings</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../res/resources.qrc">
-    <normaloff>:/icon/qnapi.png</normaloff>:/icon/qnapi.png</iconset>
+    <normaloff>:/icon/subnapi.png</normaloff>:/icon/subnapi.png</iconset>
   </property>
   <layout class="QVBoxLayout">
    <item>
@@ -28,7 +28,7 @@
        <string>General</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="10" column="0" colspan="3">
+       <item row="11" column="0" colspan="3">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -54,6 +54,16 @@
          </property>
         </widget>
        </item>
+      <item row="8" column="0" colspan="3">
+       <widget class="QCheckBox" name="cbDesktopNotifications">
+        <property name="toolTip">
+         <string>Prefer desktop environment notifications over Qt message boxes for successful downloads.</string>
+        </property>
+        <property name="text">
+         <string>Use desktop notifications for successful downloads</string>
+        </property>
+       </widget>
+      </item>
        <item row="2" column="0">
         <widget class="QLabel" name="lb7zPath">
          <property name="text">
@@ -88,14 +98,14 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0" colspan="2">
+       <item row="9" column="0" colspan="2">
         <widget class="QCheckBox" name="cbChangePermissions">
          <property name="text">
           <string>Subtitles file permissions: </string>
          </property>
         </widget>
        </item>
-       <item row="8" column="2">
+       <item row="9" column="2">
         <layout class="QHBoxLayout" name="_2">
          <property name="spacing">
           <number>6</number>
@@ -157,7 +167,7 @@
          </item>
         </layout>
        </item>
-       <item row="9" column="0" colspan="3">
+       <item row="10" column="0" colspan="3">
         <widget class="QCheckBox" name="cbShowDockIcon">
          <property name="text">
           <string>Show icon in the system tray (requires application restart)</string>
@@ -620,39 +630,6 @@
             </item>
            </layout>
           </item>
-          <item row="3" column="0" colspan="4">
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Fixed</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>30</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="cbShowAllEncodings">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Show all available character encodings</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
           <item row="5" column="0" colspan="4">
            <widget class="QTextEdit" name="teRemoveLinesWords">
             <property name="enabled">
@@ -842,7 +819,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>cbAutoDetectEncoding</tabstop>
   <tabstop>cbEncFrom</tabstop>
   <tabstop>cbEncTo</tabstop>
-  <tabstop>cbShowAllEncodings</tabstop>
   <tabstop>cbRemoveLines</tabstop>
   <tabstop>teRemoveLinesWords</tabstop>
   <tabstop>cbSubFormat</tabstop>

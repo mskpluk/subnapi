@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove)
+        # Usuń mime type
+        xdg-mime uninstall --system /usr/share/subnapi/napiprojekt-mime.xml 2>/dev/null || true
+
+        # Usuń URI handler
+        xdg-desktop-menu uninstall --system /usr/share/applications/subnapi-uri.desktop 2>/dev/null || true
+
+        # Update desktop database
+        update-desktop-database /usr/share/applications 2>/dev/null || true
+
+        # Update mime database
+        update-mime-database /usr/share/mime 2>/dev/null || true
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

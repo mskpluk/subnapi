@@ -14,6 +14,9 @@
 
 #include "frmscan.h"
 #include "libqnapi.h"
+#include "utils/subtitlefinder.h"
+
+#include <QScreen>
 
 frmScan::frmScan(QWidget *parent, Qt::WindowFlags f)
     : QDialog(parent, f), scanConfig(LibQNapi::loadConfig().scanConfig()) {
@@ -57,7 +60,7 @@ frmScan::frmScan(QWidget *parent, Qt::WindowFlags f)
   iconFilm = QIcon(":/ui/film.png");
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 }
 
@@ -274,18 +277,8 @@ bool ScanFilesThread::doScan(const QString &path, QDir::Filters filters) {
     } else {
       if (!QFile::exists((*p).absoluteFilePath())) continue;
 
-      bool subtitleFileFound = false;
-      if (skipIfSubtitlesExists) {
-        foreach (QString subExt, staticConfig->subtitleExtensions()) {
-          if (QFile::exists((*p).absolutePath() + "/" +
-                            (*p).completeBaseName() + "." + subExt)) {
-            subtitleFileFound = true;
-            break;
-          }
-        }
-      }
-
-      if (subtitleFileFound) {
+      if (skipIfSubtitlesExists &&
+          findLocalSubtitleFile(*p, staticConfig->subtitleExtensions())) {
         continue;
       }
 

@@ -13,10 +13,11 @@
 *****************************************************************************/
 
 #include "encodingutils.h"
+#include "utils/legacycodecs.h"
 
 #include <QFile>
-#include <QTextCodec>
-#include <QTextStream>
+#include <QStringDecoder>
+#include <QStringEncoder>
 
 EncodingUtils::EncodingUtils() {
   diacritics = QString::fromUtf8(
@@ -132,19 +133,27 @@ QString EncodingUtils::replaceDiacriticsWithASCII(const QString &str) const {
 }
 
 QString EncodingUtils::detectBufferEncoding(const QByteArray &buffer) const {
-  QTextCodec::ConverterState state;
-  QTextCodec::codecForName("UTF-8")->toUnicode(buffer.constData(),
-                                               buffer.length(), &state);
+  // A byte-order mark unambiguously identifies UTF-16 (and UTF-8), which the
+  // legacy-codec matching loop below can never detect on its own.
+  auto bomEncoding = QStringConverter::encodingForData(buffer);
+  if (bomEncoding) {
+    if (*bomEncoding == QStringConverter::Utf16 ||
+        *bomEncoding == QStringConverter::Utf16LE ||
+        *bomEncoding == QStringConverter::Utf16BE) {
+      return "UTF-16";
+    }
+    if (*bomEncoding == QStringConverter::Utf8) return "UTF-8";
+  }
 
-  if (state.invalidChars == 0) return "UTF-8";
+  QStringDecoder utf8Decoder(QStringConverter::Utf8);
+  utf8Decoder.decode(buffer);
+  if (!utf8Decoder.hasError()) return "UTF-8";
 
   int bestMatch = 0;
   QString from;
 
   foreach (QString codec, codecs) {
-    QTextCodec *tc = QTextCodec::codecForName(qPrintable(codec));
-
-    const QString text = tc->toUnicode(buffer.constData(), buffer.size());
+    const QString text = decode(codec, buffer).value();
 
     QStringList chars = QString::fromUtf8("ą/ś/ż/ć/ń/ł/ó/ę").split("/");
 
@@ -163,6 +172,38 @@ QString EncodingUtils::detectBufferEncoding(const QByteArray &buffer) const {
   }
 
   return from;
+}
+
+Maybe<QString> EncodingUtils::decode(const QString &encodingName,
+                                     const QByteArray &bytes) const {
+  if (encodingName.startsWith("UTF-16", Qt::CaseInsensitive))
+    return just(QStringDecoder(QStringConverter::Utf16).decode(bytes));
+
+  if (encodingName.compare("UTF-8", Qt::CaseInsensitive) == 0)
+    return just(QString::fromUtf8(bytes));
+
+  Maybe<LegacyCodecs::Encoding> legacy =
+      LegacyCodecs::encodingForName(encodingName);
+  if (legacy) return just(LegacyCodecs::toUnicode(legacy.value(), bytes));
+
+  return nothing();
+}
+
+Maybe<QByteArray> EncodingUtils::encode(const QString &encodingName,
+                                        const QString &text) const {
+  if (encodingName.startsWith("UTF-16", Qt::CaseInsensitive))
+    return just(QStringEncoder(QStringConverter::Utf16,
+                               QStringConverter::Flag::WriteBom)
+                    .encode(text));
+
+  if (encodingName.compare("UTF-8", Qt::CaseInsensitive) == 0)
+    return just(text.toUtf8());
+
+  Maybe<LegacyCodecs::Encoding> legacy =
+      LegacyCodecs::encodingForName(encodingName);
+  if (legacy) return just(LegacyCodecs::fromUnicode(legacy.value(), text));
+
+  return nothing();
 }
 
 QString EncodingUtils::detectFileEncoding(const QString &filename) const {

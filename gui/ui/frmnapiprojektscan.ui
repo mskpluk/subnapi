@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>frmNapiProjektScan</class>
+ <widget class="QDialog" name="frmNapiProjektScan">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>460</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Subnapi - Search for subtitles on disk</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../res/resources.qrc">
+    <normaloff>:/icon/subnapi.png</normaloff>:/icon/subnapi.png</iconset>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLineEdit" name="leDirectory"/>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="pbDirectorySelect">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../res/resources.qrc">
+       <normaloff>:/ui/folder.png</normaloff>:/ui/folder.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QPushButton" name="pbScan">
+     <property name="text">
+      <string>Scan</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="QLabel" name="lbAction">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="3">
+    <widget class="QTableWidget" name="twResults">
+     <property name="editTriggers">
+      <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::NoSelection</enum>
+     </property>
+     <column>
+      <property name="text">
+       <string>Subtitles</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Author</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Format</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Language</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Status</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QLabel" name="lbHint">
+     <property name="text">
+      <string>Click a row's status to decide which subtitles get sent to the server.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QPushButton" name="pbSendSelected">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Send selected</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../res/resources.qrc"/>
+ </resources>
+</ui>

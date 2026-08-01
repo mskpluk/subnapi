@@ -15,6 +15,7 @@
 #ifndef ENCODINGUTILS_H
 #define ENCODINGUTILS_H
 
+#include <Maybe.h>
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
@@ -26,6 +27,14 @@ class EncodingUtils {
   QString replaceDiacriticsWithASCII(const QString& str) const;
   QString detectBufferEncoding(const QByteArray& buffer) const;
   QString detectFileEncoding(const QString& filename) const;
+
+  // Decode/encode using one of the supported encoding names: UTF-8, UTF-16,
+  // windows-1250, windows-1257, ISO-8859-2, ISO-8859-13, ISO-8859-16.
+  // Returns nothing() if encodingName isn't one of the supported names.
+  Maybe<QString> decode(const QString& encodingName,
+                        const QByteArray& bytes) const;
+  Maybe<QByteArray> encode(const QString& encodingName,
+                           const QString& text) const;
 
  private:
   QString diacritics;

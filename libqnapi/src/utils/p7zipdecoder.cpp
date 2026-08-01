@@ -14,7 +14,10 @@
 
 #include "p7zipdecoder.h"
 
+#include <QFile>
+#include <QFileInfo>
 #include <QProcess>
+#include <QRegularExpression>
 
 P7ZipDecoder::P7ZipDecoder(const QString& p7zipPath, int operationTimeoutMsecs)
     : p7zipPath(p7zipPath), operationTimeoutMsecs(operationTimeoutMsecs) {}
@@ -22,19 +25,12 @@ P7ZipDecoder::P7ZipDecoder(const QString& p7zipPath, int operationTimeoutMsecs)
 QStringList P7ZipDecoder::listArchiveFiles(const QString& archivePath) const {
   QString stdoutBuff = readP7ZipOutput({"l", "-slt", archivePath});
 
-#ifdef Q_OS_WIN
-  QRegExp r("\r\nPath = ([^\r\n]*)\r\n");
-#else
-  QRegExp r("\nPath = ([^\n]*)\n");
-#endif
-  r.setPatternSyntax(QRegExp::RegExp2);
+  QRegularExpression r("\nPath = ([^\n]*)\n");
 
   QStringList files;
-  int offset = 0;
-
-  while ((offset = r.indexIn(stdoutBuff, offset)) != -1) {
-    files << r.cap(1);
-    offset += r.matchedLength();
+  QRegularExpressionMatchIterator it = r.globalMatch(stdoutBuff);
+  while (it.hasNext()) {
+    files << it.next().captured(1);
   }
 
   return files;
@@ -57,8 +53,22 @@ bool P7ZipDecoder::unpackSecureArchiveFiles(const QString& archivePath,
   return runP7Zip({"e", "-y", "-p" + password, "-o" + targetPath, archivePath});
 }
 
-bool P7ZipDecoder::runP7Zip(const QStringList& args) const {
+bool P7ZipDecoder::createSecureArchive(const QString& archivePath,
+                                       const QString& password,
+                                       const QString& sourceFilePath) const {
+  if (QFile::exists(archivePath)) QFile::remove(archivePath);
+
+  QFileInfo sourceInfo(sourceFilePath);
+  return runP7Zip({"a", "-p" + password, archivePath, sourceInfo.fileName()},
+                  sourceInfo.absolutePath());
+}
+
+bool P7ZipDecoder::runP7Zip(const QStringList& args,
+                           const QString& workingDirectory) const {
   QProcess p7zip;
+  if (!workingDirectory.isEmpty()) {
+    p7zip.setWorkingDirectory(workingDirectory);
+  }
   p7zip.start(p7zipPath, args);
 
   bool result = p7zip.waitForFinished(operationTimeoutMsecs);

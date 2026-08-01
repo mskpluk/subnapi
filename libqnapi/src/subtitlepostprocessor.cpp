@@ -16,8 +16,7 @@
 
 #include <QFile>
 #include <QFileInfo>
-#include <QTextCodec>
-#include <QTextStream>
+#include <QRegularExpression>
 
 SubtitlePostProcessor::SubtitlePostProcessor(
     const PostProcessingConfig& ppConfig,
@@ -65,13 +64,14 @@ bool SubtitlePostProcessor::ppReplaceDiacriticsWithASCII(
   if (!f.open(QIODevice::ReadOnly)) return false;
 
   QByteArray fileContent = f.readAll();
-
-  QString contentStr =
-      QTextCodec::codecForName(qPrintable(from))->toUnicode(fileContent);
   f.close();
 
+  Maybe<QString> contentStr = encodingUtils.decode(from, fileContent);
+  if (!contentStr) return false;
+
   fileContent.clear();
-  fileContent.append(encodingUtils.replaceDiacriticsWithASCII(contentStr));
+  fileContent.append(
+      encodingUtils.replaceDiacriticsWithASCII(contentStr.value()).toUtf8());
 
   if (!f.open(QIODevice::WriteOnly)) return false;
 
@@ -88,22 +88,17 @@ bool SubtitlePostProcessor::ppChangeSubtitlesEncoding(
   if (!f.open(QIODevice::ReadOnly)) return false;
 
   QByteArray fileContent = f.readAll();
-
-  QString contentStr =
-      QTextCodec::codecForName(qPrintable(from))->toUnicode(fileContent);
   f.close();
 
-  if (to.compare("UTF-8", Qt::CaseInsensitive) != 0) {
-    fileContent = QTextCodec::codecForName(qPrintable(to))
-                      ->fromUnicode(contentStr.constData(), contentStr.size());
-  } else {
-    fileContent.clear();
-    fileContent.append(contentStr);
-  }
+  Maybe<QString> contentStr = encodingUtils.decode(from, fileContent);
+  if (!contentStr) return false;
 
-  if (!f.open(QIODevice::WriteOnly)) return false;
+  Maybe<QByteArray> encoded = encodingUtils.encode(to, contentStr.value());
+  if (!encoded) return false;
 
-  f.write(fileContent);
+  if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+
+  f.write(encoded.value());
   f.close();
 
   return true;
@@ -117,59 +112,59 @@ bool SubtitlePostProcessor::ppChangeSubtitlesEncoding(
 
   if (from.isEmpty()) return false;
 
-  return ppChangeSubtitlesEncoding(from, to);
+  return ppChangeSubtitlesEncoding(subtitleFilePath, from, to);
 }
 
 bool SubtitlePostProcessor::ppRemoveLinesContainingWords(
     const QString& subtitleFilePath, QStringList wordList) const {
   if (!QFileInfo(subtitleFilePath).exists()) return false;
 
-  wordList = wordList.filter(QRegExp("^(.+)$"));
+  wordList = wordList.filter(QRegularExpression("^(.+)$"));
 
   QString fromCodec = encodingUtils.detectFileEncoding(subtitleFilePath);
 
   if (fromCodec.isEmpty()) fromCodec = ppConfig.encodingFrom();
 
   QFile f(subtitleFilePath);
-  if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+  if (!f.open(QIODevice::ReadOnly)) return false;
 
-  QList<QByteArray> lines = f.readAll().split('\n');
-  QList<QByteArray> out;
+  Maybe<QString> contentOpt = encodingUtils.decode(fromCodec, f.readAll());
+  f.close();
+  if (!contentOpt) return false;
+  QString content = contentOpt.value();
 
-  foreach (QByteArray line, lines) {
-    int i;
-    while ((i = line.indexOf('\r')) >= 0) line.remove(i, 1);
+  QStringList lines = content.split(QRegularExpression("\r\n|\n|\r"));
+  if (!lines.isEmpty() && lines.last().isEmpty() &&
+      (content.endsWith('\n') || content.endsWith('\r'))) {
+    lines.removeLast();
+  }
 
-    QTextStream ts(line);
-    ts.setCodec(qPrintable(fromCodec));
-    QString encLine = ts.readAll();
-
-    if (encLine.isEmpty()) {
-      out << line;
-      continue;
-    }
-
+  // Filter lines
+  QStringList filtered;
+  foreach (QString line, lines) {
     bool found = false;
     foreach (QString word, wordList) {
-      if (encLine.contains(word, Qt::CaseInsensitive)) {
+      if (line.contains(word, Qt::CaseInsensitive)) {
         found = true;
         break;
       }
     }
-    if (found) continue;
-
-    out << line;
+    if (!found) {
+      filtered << line;
+    }
   }
 
-  f.close();
-
-  if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
-    return false;
-
-  foreach (QByteArray line, out) {
-    f.write(line);
-    f.write("\n", 1);
+  // Write back with same encoding
+  QString outContent;
+  foreach (QString line, filtered) {
+    outContent += line + "\n";
   }
+  Maybe<QByteArray> encoded = encodingUtils.encode(fromCodec, outContent);
+  if (!encoded) return false;
+
+  if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+
+  f.write(encoded.value());
   f.close();
 
   return true;

@@ -40,7 +40,6 @@ class SubtitleMatcher : public QObject {
   bool isWritablePath(QString path) const;
   void removeOrCopy(QString targetMoviefilePath,
                     QString targetSubtitlesFilePath) const;
-  bool dryCopy(QString srcFilePath, QString dstFilePath) const;
   void fixFilePermissions(QString targetSubtitlesFilePath,
                           QString changePermissionsTo) const;
 

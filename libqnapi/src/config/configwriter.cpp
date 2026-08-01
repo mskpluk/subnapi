@@ -19,7 +19,8 @@ ConfigWriter::ConfigWriter(const QString& qnapiVersion)
     : qnapiVersion(qnapiVersion) {}
 
 void ConfigWriter::writeUserConfig(const QNapiConfig& config) const {
-  QSettings settings(QSettings::IniFormat, QSettings::UserScope, "qnapi");
+  // Must match ConfigReader::readUserConfig's organization string.
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, "subnapi");
   writeConfig(config, settings);
 }
 
@@ -56,6 +57,8 @@ void ConfigWriter::writeGeneralConfig(const GeneralConfig& generalConfig,
   settings.setValue("qnapi/change_permissions",
                     generalConfig.changePermissionsEnabled());
   settings.setValue("qnapi/permissions", generalConfig.changePermissionsTo());
+  settings.setValue("qnapi/desktop_notifications",
+                    generalConfig.desktopNotificationsEnabled());
 }
 
 void ConfigWriter::writeEnabledEngines(
@@ -98,8 +101,6 @@ void ConfigWriter::writePostProcessingConfig(
   settings.setValue("qnapi/auto_detect_encoding",
                     postProcessingConfig.encodingAutoDetectFrom());
   settings.setValue("qnapi/enc_to", postProcessingConfig.encodingTo());
-  settings.setValue("qnapi/show_all_encodings",
-                    postProcessingConfig.showAllEncodings());
   settings.setValue("qnapi/sub_format", postProcessingConfig.subFormat());
   settings.setValue("qnapi/sub_ext", postProcessingConfig.subExtension());
   settings.setValue("qnapi/skip_convert_ads",

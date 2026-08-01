@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>frmNapiProjektUpload</class>
+ <widget class="QDialog" name="frmNapiProjektUpload">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>460</width>
+    <height>320</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Subnapi - Upload subtitles to NapiProjekt</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../res/resources.qrc">
+    <normaloff>:/icon/subnapi.png</normaloff>:/icon/subnapi.png</iconset>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="lbVideoFile">
+     <property name="text">
+      <string>Video file:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLineEdit" name="leVideoFile"/>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="pbVideoFileSelect">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../res/resources.qrc">
+       <normaloff>:/ui/folder.png</normaloff>:/ui/folder.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QLabel" name="lbSubtitleFile">
+     <property name="text">
+      <string>Subtitles file:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLineEdit" name="leSubtitleFile"/>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="pbSubtitleFileSelect">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../res/resources.qrc">
+       <normaloff>:/ui/folder.png</normaloff>:/ui/folder.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="lbLang">
+     <property name="text">
+      <string>Language:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="cbLang"/>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="lbAuthor">
+     <property name="text">
+      <string>Author (optional):</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QLineEdit" name="leAuthor"/>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QCheckBox" name="cbCorrection">
+     <property name="text">
+      <string>This is a correction to existing subtitles</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="2">
+    <widget class="QLabel" name="lbComment">
+     <property name="text">
+      <string>Correction comment:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QLineEdit" name="leComment"/>
+   </item>
+   <item row="9" column="0" colspan="2">
+    <widget class="QLabel" name="lbStatus">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../res/resources.qrc"/>
+ </resources>
+</ui>

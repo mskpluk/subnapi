@@ -35,6 +35,9 @@ QNapiApp::QNapiApp(int &argc, char **argv, const QString &appName)
   scanAction = 0;
   convertAction = 0;
   napiGetAction = 0;
+  napiUploadAction = 0;
+  napiCorrectAction = 0;
+  napiScanUploadAction = 0;
   napiCreateUserAction = 0;
   osGetAction = 0;
   osAddAction = 0;
@@ -47,6 +50,14 @@ QNapiApp::QNapiApp(int &argc, char **argv, const QString &appName)
   napisy24SubMenu = 0;
   trayIconMenu = 0;
   trayIcon = 0;
+
+  connect(
+      this, &QNapiApp::downloadFile,
+      this, [this] (const QString &path) { progress()->receiveRequest(path); });
+
+  connect( // ### Qt 5.7 use QOverload
+      this, static_cast<void (QNapiApp::*)(const QString&)>(&QNapiApp::request),
+      this, &QNapiApp::downloadFile);
 }
 
 QNapiApp::~QNapiApp() {
@@ -62,6 +73,9 @@ QNapiApp::~QNapiApp() {
   if (scanAction) delete scanAction;
   if (convertAction) delete convertAction;
   if (napiGetAction) delete napiGetAction;
+  if (napiUploadAction) delete napiUploadAction;
+  if (napiCorrectAction) delete napiCorrectAction;
+  if (napiScanUploadAction) delete napiScanUploadAction;
   if (napiCreateUserAction) delete napiCreateUserAction;
   if (osGetAction) delete osGetAction;
   if (osAddAction) delete osAddAction;
@@ -80,10 +94,6 @@ frmProgress *QNapiApp::progress() {
   if (!f_progress) {
     f_progress = new frmProgress();
     if (!f_progress) abort();
-    connect(this, SIGNAL(request(QString)), f_progress,
-            SLOT(receiveRequest(QString)));
-    connect(this, SIGNAL(downloadFile(const QString &)), f_progress,
-            SLOT(receiveRequest(const QString &)));
   }
   return f_progress;
 }
@@ -103,6 +113,19 @@ void QNapiApp::createTrayIcon() {
   napiGetAction = new QAction(tr("Download subtitles"), 0);
   connect(napiGetAction, &QAction::triggered,
           [this] { showOpenDialog(LibQNapi::loadConfig(), "NapiProjekt"); });
+
+  napiUploadAction = new QAction(tr("Upload subtitles"), 0);
+  connect(napiUploadAction, &QAction::triggered,
+          [this] { showNapiProjektUploadDialog(false); });
+
+  napiCorrectAction = new QAction(tr("Send a subtitles correction"), 0);
+  connect(napiCorrectAction, &QAction::triggered,
+          [this] { showNapiProjektUploadDialog(true); });
+
+  napiScanUploadAction =
+      new QAction(tr("Search for subtitles on disk to upload"), 0);
+  connect(napiScanUploadAction, &QAction::triggered, this,
+          &QNapiApp::showNapiProjektScanDialog);
 
   napiCreateUserAction = new QAction(tr("Create an account"), 0);
   connect(napiCreateUserAction, &QAction::triggered,
@@ -139,6 +162,9 @@ void QNapiApp::createTrayIcon() {
   napiSubMenu = new QMenu(0);
   napiSubMenu->setTitle(tr("NapiProjekt"));
   napiSubMenu->addAction(napiGetAction);
+  napiSubMenu->addAction(napiUploadAction);
+  napiSubMenu->addAction(napiCorrectAction);
+  napiSubMenu->addAction(napiScanUploadAction);
   napiSubMenu->addAction(napiCreateUserAction);
 
   osSubMenu = new QMenu(0);
@@ -169,7 +195,7 @@ void QNapiApp::createTrayIcon() {
   trayIcon = new QSystemTrayIcon(0);
   trayIcon->setContextMenu(trayIconMenu);
 
-  trayIcon->setIcon(QIcon::fromTheme("qnapi-panel", QIcon(":/icon/qnapi.png")));
+  trayIcon->setIcon(QIcon::fromTheme("subnapi-panel", QIcon(":/icon/subnapi.png")));
 
   connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this,
           SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
@@ -280,6 +306,19 @@ void QNapiApp::showOSUploadDialog() const {
   QDesktopServices::openUrl(QUrl("http://www.opensubtitles.org/upload"));
 }
 
+void QNapiApp::showNapiProjektUploadDialog(bool correction) {
+  frmNapiProjektUpload *dialog = new frmNapiProjektUpload();
+  dialog->setCorrectionMode(correction);
+  dialog->exec();
+  delete dialog;
+}
+
+void QNapiApp::showNapiProjektScanDialog() {
+  frmNapiProjektScan *dialog = new frmNapiProjektScan();
+  dialog->exec();
+  delete dialog;
+}
+
 void QNapiApp::showSettings() {
   if (!f_options) {
     f_options = new frmOptions();
@@ -314,11 +353,7 @@ void QNapiApp::tryQuit() {
 }
 
 void QNapiApp::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
-  if (reason == QSystemTrayIcon::Trigger)
-#ifndef Q_OS_MAC
-    showOpenDialog(LibQNapi::loadConfig())
-#endif
-        ;
+  if (reason == QSystemTrayIcon::Trigger) showOpenDialog(LibQNapi::loadConfig());
 }
 
 bool QNapiApp::event(QEvent *ev) {

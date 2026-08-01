@@ -21,9 +21,8 @@ SyncHTTP::SyncHTTP() : manager(this) {}
 
 QNetworkReply* SyncHTTP::syncGet(const QNetworkRequest& req) {
   QNetworkReply* reply = manager.get(req);
-  connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-  connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), &loop,
-          SLOT(quit()));
+  connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
   loop.exec();
   return reply;
 }
@@ -31,9 +30,18 @@ QNetworkReply* SyncHTTP::syncGet(const QNetworkRequest& req) {
 QNetworkReply* SyncHTTP::syncPost(const QNetworkRequest& req,
                                   const QByteArray& data) {
   QNetworkReply* reply = manager.post(req, data);
-  connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-  connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), &loop,
-          SLOT(quit()));
+  connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
+  loop.exec();
+  return reply;
+}
+
+QNetworkReply* SyncHTTP::syncPost(const QNetworkRequest& req,
+                                  QHttpMultiPart* multiPart) {
+  QNetworkReply* reply = manager.post(req, multiPart);
+  multiPart->setParent(reply);
+  connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
   loop.exec();
   return reply;
 }

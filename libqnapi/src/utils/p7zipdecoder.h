@@ -32,11 +32,19 @@ class P7ZipDecoder {
                                 const QString& password,
                                 const QString& targetPath) const;
 
+  // Creates a password-protected 7z archive at archivePath containing just
+  // sourceFilePath. Runs with the process's working directory set to
+  // sourceFilePath's parent, passing only its basename to 7z, so the
+  // resulting archive entry is a bare filename with no path prefix.
+  bool createSecureArchive(const QString& archivePath, const QString& password,
+                           const QString& sourceFilePath) const;
+
  private:
   const QString p7zipPath;
   int operationTimeoutMsecs;
 
-  bool runP7Zip(const QStringList& args) const;
+  bool runP7Zip(const QStringList& args,
+               const QString& workingDirectory = QString()) const;
   QString readP7ZipOutput(const QStringList& args) const;
 };
 

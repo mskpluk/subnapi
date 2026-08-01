@@ -14,6 +14,7 @@
 
 #include "climain.h"
 #include "clisubtitlesdownloader.h"
+#include "clisubtitlesuploader.h"
 #include "libqnapi.h"
 #include "qnapicommand.h"
 #include "subtitlelanguage.h"
@@ -29,12 +30,12 @@ namespace CliMain {
 void installTranslation(QCoreApplication &app, QTranslator *translator,
                         const QNapiConfig &config) {
   QString uiLanguage = LibQNapi::uiLanguage(config.generalConfig());
-  translator->load("qnapi_" + uiLanguage, ":/translations");
+  translator->load("subnapi_" + uiLanguage, ":/translations");
   app.installTranslator(translator);
 }
 
 void printHeader(const Console &c) {
-  c.printLine(tr("QNapi %1 (Qt version %2), %3")
+  c.printLine(tr("Subnapi %1 (Qt version %2), %3")
                   .arg(LibQNapi::displayableVersion())
                   .arg(qVersion())
                   .arg(LibQNapi::webpageUrl()));
@@ -49,7 +50,7 @@ void printHelp(const Console &c,
 
 void printHelpLanguages(const Console &c, const QNapiConfig &config) {
   c.printLine(
-      tr("List of languages recognized by QNapi, including corresponding"));
+      tr("List of languages recognized by Subnapi, including corresponding"));
   c.printLine(tr("two-letter language codes:"));
   c.printLine();
 
@@ -90,6 +91,9 @@ int processCommand(QVariant cliCommand, const QNapiConfig &config,
         cliCommand.value<DownloadSubtitles>().movieFilePaths;
     return CliSubtitlesDownloader::downloadSubtitlesFor(c, movieFilePaths,
                                                         config);
+  } else if (cliCommand.canConvert<UploadSubtitles>()) {
+    return CliSubtitlesUploader::uploadSubtitlesFor(
+        c, cliCommand.value<UploadSubtitles>(), config);
   } else if (cliCommand.canConvert<ShowHelpLanguages>()) {
     printHelpLanguages(c, config);
     return 0;
@@ -103,7 +107,7 @@ void sigHandler(int sig) {
   Q_UNUSED(sig);
 
   std::cout << std::endl
-            << tr("QNapi: deleting temporary files...").toStdString()
+            << tr("Subnapi: deleting temporary files...").toStdString()
             << std::endl;
 
   const QNapiConfig config = LibQNapi::loadConfig();
@@ -111,30 +115,25 @@ void sigHandler(int sig) {
   QDir tmpDir(tmpPath);
 
   QStringList filters;
-  filters << "QNapi-*-rc";
-  filters << "QNapi.*.tmp";
+  filters << "Subnapi-*-rc";
+  filters << "Subnapi.*.tmp";
 
   QFileInfoList files = tmpDir.entryInfoList(filters);
 
   foreach (QFileInfo file, files) { QFile::remove(file.filePath()); }
 
-  std::cout << tr("QNapi: finished.").toStdString() << std::endl;
+  std::cout << tr("Subnapi: finished.").toStdString() << std::endl;
 
   exit(666);
 }
 
 void regSignal() {
-#ifdef Q_OS_WIN
-  signal(SIGTERM, sigHandler);
-  signal(SIGINT, sigHandler);
-#else
   struct sigaction sa;
   memset(&sa, 0, sizeof(struct sigaction));
   sigemptyset(&sa.sa_mask);
   sa.sa_handler = sigHandler;
   sigaction(SIGTERM, &sa, 0);
   sigaction(SIGINT, &sa, 0);
-#endif
 }
 
 }  // namespace CliMain

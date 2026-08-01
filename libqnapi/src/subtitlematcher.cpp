@@ -44,15 +44,7 @@ bool SubtitleMatcher::matchSubtitles(QString subtitlesTmpFilePath,
 
   removeOrCopy(targetMovieFilePath, targetSubtitlesFilePath);
 
-  bool result = false;
-
-#ifdef Q_OS_WIN
-  // Pod windowsem, aby "wyczyscic" atrybuty pliku, tworzymy go na nowo
-  result = dryCopy(subtitlesTmpFilePath, targetSubtitlesFilePath);
-#else
-  // pod innymi OS-ami wystarczy skopiowac plik
-  result = QFile::copy(subtitlesTmpFilePath, targetSubtitlesFilePath);
-#endif
+  bool result = QFile::copy(subtitlesTmpFilePath, targetSubtitlesFilePath);
 
   if (changePermissions) {
     fixFilePermissions(targetSubtitlesFilePath, changePermissionsTo);
@@ -105,22 +97,6 @@ void SubtitleMatcher::removeOrCopy(QString targetMoviefilePath,
     } else
       QFile::remove(targetSubtitlesFilePath);
   }
-}
-
-bool SubtitleMatcher::dryCopy(QString srcFilePath, QString dstFilePath) const {
-  QFile dstFile(dstFilePath), srcFile(srcFilePath);
-  bool result = false;
-
-  if (!dstFile.open(QIODevice::WriteOnly) ||
-      !srcFile.open(QIODevice::ReadOnly)) {
-    dstFile.close();
-  } else {
-    result = dstFile.write(srcFile.readAll()) > 0;
-    srcFile.close();
-    dstFile.close();
-  }
-
-  return result;
 }
 
 void SubtitleMatcher::fixFilePermissions(QString targetSubtitlesFilePath,

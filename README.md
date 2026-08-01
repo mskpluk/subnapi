@@ -1,109 +1,115 @@
-# QNapi [![Build Status](https://travis-ci.org/QNapi/qnapi.svg?branch=master)](https://travis-ci.org/QNapi/qnapi) [![Build status](https://ci.appveyor.com/api/projects/status/mdebep2uhrc3oagq/branch/master?svg=true)](https://ci.appveyor.com/project/krzemin/qnapi/branch/master) [![GitHub release](https://img.shields.io/github/release/QNapi/qnapi.svg)](https://github.com/QNapi/qnapi/releases) [![Github All Releases](https://img.shields.io/github/downloads/QNapi/qnapi/total.svg)](https://qnapi.github.io/#download)
+# Subnapi
 
-QNapi is free software for automatic fetching subtitles for given movie file.
-It uses online databases such as NapiProjekt, OpenSubtitles and Napisy24.
-It is based on Qt5 library, so it can be launched on any supported operating
-system, including Windows, OSX and Linux.
+Subnapi is a Linux program for automatic downloading and uploading of movie
+subtitles. It matches subtitles against the local movie file (by hash, not by
+file name) using online databases: [NapiProjekt](https://www.napiprojekt.pl),
+[OpenSubtitles](https://www.opensubtitles.org) and
+[Napisy24](https://napisy24.pl).
 
-## Binary packages
+Subnapi is a fork of [QNapi](https://github.com/QNapi/qnapi), whose upstream
+has been inactive since 2022. Version 0.5.0 is the first Subnapi release.
 
-Latest binary packages are available at http://qnapi.github.io/#download
+## What's different from the original QNapi
+
+**Added**
+
+* NapiProjekt subtitle **upload and correction** support (removed from QNapi
+  in 0.2.2 when the old API died), reimplemented against the current
+  NapiProjekt API:
+  * an upload dialog for new subtitles and corrections (GUI),
+  * a directory scan-and-review flow: scan a folder for movies with local
+    subtitles, see which are missing from NapiProjekt's database and send the
+    selected ones in one batch (GUI),
+  * `-u/--upload` and `-r/--correct` switches (with `-a/--author`,
+    `-m/--comment`) in the command-line client `subnapic`.
+* `napiprojekt:` URI scheme handler — clicking a `napiprojekt:` link in a
+  browser downloads subtitles by hash.
+* Desktop notifications (DBus, with tray fallback) with a settings toggle.
+* Flatpak packaging and a reproducible Debian package build.
+
+**Changed**
+
+* Ported from Qt5 to Qt6.
+* Linux-only: Windows/macOS support, packaging and bundled prebuilt binaries
+  were dropped.
+* Configuration migrates automatically from `~/.config/qnapi.ini` to
+  `~/.config/subnapi.ini` (the original file is left untouched).
+
+**Fixed**
+
+* UTF-16 LE subtitle processing.
+* Encoding detection when downloading subtitles via `napiprojekt:` links.
+* A temp-file collision that could make a `napiprojekt:` hash download return
+  the content of an unrelated file.
+* Download process not starting (pending upstream fix from QNapi PR #188).
+
+## Installing
+
+### Debian / Ubuntu package
+
+A `.deb` built against Debian 13 "trixie" installs cleanly on Debian 13.x and
+Ubuntu 26.04 LTS. To build it reproducibly in a rootless Podman container
+(no sudo needed beyond installing Podman itself):
+
+```
+$ scripts/build-deb-trixie.sh
+```
+
+The package lands in `../subnapi-deb-build/`. Alternatively, on any
+Debian-based system with the build dependencies installed:
+
+```
+$ dpkg-buildpackage -us -uc -b
+```
+
+### Flatpak
+
+```
+$ scripts/build-flatpak.sh
+```
+
+This builds and installs a per-user Flatpak from
+`flatpak/io.github.mskpluk.subnapi.yml` (runtime: `org.kde.Platform` 6.11).
+Requires `flatpak` and `flatpak-builder`. Then:
+
+```
+$ flatpak run io.github.mskpluk.subnapi
+```
 
 ## Building from source
 
-#### Prerequisites
+### Prerequisites
 
-* C++ compiler with c++11 support installed (`clang++`, `g++` or *MinGW* for Windows), present in `PATH`
-* Qt 5.2+ (most recent 5.x recommended) installed with `qmake` present in `PATH` (you can find one at http://www.qt.io/download-open-source/)
+* a C++17 compiler (`g++` or `clang++`)
+* Qt 6 with `qmake6` (Debian/Ubuntu: `qt6-base-dev qt6-base-dev-tools`)
+* `libmediainfo-dev` and `pkgconf`
+* at runtime: a 7-Zip binary (`7z`/`7za`; Debian/Ubuntu package `7zip` or
+  `p7zip-full`) — subtitles from NapiProjekt are 7z-compressed
 
-#### Binary prerequisites
+### Compiling
 
-QNapi requires these binary dependencies:
+```
+$ qmake6
+$ make
+```
 
-* p7zip (7z, 7za) - to unpack subtitles, which are commonly compressed with 7zip
-* libmediainfo - to retrieve movie info such as dimensions, duration and frame rate
+This builds the GUI binary `subnapi` and the command-line client
+`cli/subnapic` (append `CONFIG+=no_cli` or `CONFIG+=no_gui` to the qmake
+invocation to skip one of them). `make install` respects `PREFIX`
+(default `/usr`).
 
-Linux/UNIX users can find these dependencies in separate packages.
+## Usage
 
-Statically compiled **p7zip** binaries are provided in this repository for Windows/OSX
-users at `win32/content/7za.exe` and `macx/content/7za`, respectively. Similarly,
-compiled **libmediainfo** libraries are provided for Windows/OSX in
-`deps/libmediainfo/`.
+Download subtitles by passing movie files as arguments (GUI or
+`subnapic [files]`), through the tray icon menu, or by clicking
+`napiprojekt:` links. Uploading requires a NapiProjekt account configured in
+Settings. See `man subnapi` for all command-line options.
 
-> **WARNING!** Precompiled binaries are stripped from the source archive!
+## License
 
-#### Cloning the source code
+GNU General Public License v2 or later. Subnapi contains code
+Copyright (C) 2008-2017 Piotr Krzemiński and QNapi contributors.
 
-First, you have to clone project source code using git client:
+## Issues
 
-`$ git clone --recursive https://github.com/QNapi/qnapi.git`
-
-#### Compiling
-
-To compile the application, you have to execute two following commands in `qnapi` root directory:
-
-`$ qmake`
-
-This will produce `Makefile`.
-
-> By appending `CONFIG+=no_cli` or `CONFIG+=no_gui` to qmake invocation you can disable building
-> command-line or graphical interface binaries.
-
-
-`$ make` (or `mingw32-make` on Windows)
-
-This will compile the sources and build executable binary (or app bundle on OSX).
-
-> **Important!** Windows users have to execute one more command:
->
-> `$ make install` (or `mingw32-make install`)
->
-> This one will copy all binaries, libraries and other dependencies to `win32/out` directory.
-
-#### Running
-
-By default, output binaries are placed by `make` in different locations, depending on your operating system:
-
-* Linux - `qnapi` in root project directory
-* OSX - `macx/QNapi.app` bundle
-* Windows - `win32/out/qnapi.exe` executable
-
-After you locate your binaries, you can run the application.
-
-> ##### 7zip note #####
-> For proper subtitle extraction after download, *7zip* executable is required to be passed in application's settings.
-> Linux users have to install 7zip binary package from distribution repositories or compile on its own.
-> For Windows and OSX there are pre-built binaries included in this repository, in `win32` and `macx` directories appropriately and should be automatically detected by the application.
-
-## Making redistributable package
-
-### OSX
-
-#### Prerequisites
-
-You need `appdmg` script installed. You can found it at https://github.com/LinusU/node-appdmg
-
-#### Building .dmg image
-
-To build .dmg image for OSX with nice, drag&drop installer, you have to execute:
-
-`$ make appdmg`
-
-`QNapi-x.y.z.dmg` will appear in `macx` directory when command is completed.
-
-### Windows
-
-#### Prerequisites
-
-You need to have **NSIS** 2.x installed. You can found it at http://nsis.sourceforge.net
-
-Also, you will need to manually install NSIS plugin **nsProcess**. It can be found at
-http://nsis.sourceforge.net/NsProcess_plugin
-
-#### Building Windows installer
-
-Installer script is placed at `win32/QNapi-setup.nsi`. You can build binary exe package using NSIS user interface (by `right mouse button -> compile NSIS script`) or from command line:
-
-`$ C:\Path\To\makensis.exe QNapi-setup.nsi`
-
-After a while, `QNapi-x.y.z-setup.exe` file will appear in `win32` directory.
+https://github.com/mskpluk/subnapi/issues

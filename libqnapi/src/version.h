@@ -15,8 +15,8 @@
 #ifndef __VERSION__H__
 #define __VERSION__H__
 
-#define QNAPI_VERSION "0.2.4"
-#define QNAPI_DISPLAYABLE_VERSION "0.2.4-snapshot"
-#define QNAPI_URL "http://qnapi.github.io"
+#define QNAPI_VERSION "0.5.0"
+#define QNAPI_DISPLAYABLE_VERSION "0.5.0"
+#define QNAPI_URL "https://github.com/mskpluk/subnapi"
 
 #endif

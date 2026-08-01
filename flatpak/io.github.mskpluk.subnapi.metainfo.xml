@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.mskpluk.subnapi</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <name>Subnapi</name>
+  <summary>Download and upload movie subtitles</summary>
+  <summary xml:lang="pl">Pobieranie i wysyłanie napisów do filmów</summary>
+  <description>
+    <p>
+      Subnapi automatically downloads subtitles matched to your movie files
+      (by hash, not by file name) from NapiProjekt, OpenSubtitles and
+      Napisy24, and can upload new subtitles or corrections back to
+      NapiProjekt.
+    </p>
+    <p xml:lang="pl">
+      Subnapi automatycznie pobiera napisy dopasowane do plików z filmami
+      (po sumie kontrolnej, nie po nazwie pliku) z serwisów NapiProjekt,
+      OpenSubtitles i Napisy24 oraz pozwala wysyłać nowe napisy i poprawki
+      do NapiProjekt.
+    </p>
+    <p>
+      Subnapi is a Linux-only fork of QNapi, adding NapiProjekt
+      upload/correction support, a napiprojekt: link handler and a Qt6 port.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.mskpluk.subnapi.desktop</launchable>
+  <provides>
+    <binary>subnapi</binary>
+    <binary>subnapic</binary>
+  </provides>
+  <categories>
+    <category>AudioVideo</category>
+  </categories>
+  <url type="homepage">https://github.com/mskpluk/subnapi</url>
+  <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.5.0" date="2026-08-01">
+      <description>
+        <p>
+          First Subnapi release. Compared to the original QNapi: NapiProjekt
+          subtitle upload and correction support (GUI dialog, directory
+          scan-and-review batch flow, CLI switches), a napiprojekt: URI
+          scheme handler, desktop notifications, a Qt6 port, and fixes for
+          UTF-16 subtitle processing and encoding detection.
+        </p>
+      </description>
+    </release>
+  </releases>
+</component>

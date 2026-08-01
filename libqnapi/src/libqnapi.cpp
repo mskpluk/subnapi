@@ -17,8 +17,26 @@
 #include "version.h"
 
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QLocale>
+
+namespace {
+// One-time migration for the qnapi -> subnapi rename: on Linux, QSettings
+// resolves IniFormat+UserScope+organization to $HOME/.config/<org>.ini, so
+// this mirrors that convention directly rather than re-deriving it via
+// QSettings. Copies (never moves) the old config so ~/.config/qnapi.ini is
+// left untouched for anyone still running the old qnapi build alongside
+// this one.
+void migrateConfigFromQNapiIfNeeded() {
+  QString newConfigPath = QDir::homePath() + "/.config/subnapi.ini";
+  QString oldConfigPath = QDir::homePath() + "/.config/qnapi.ini";
+
+  if (QFile::exists(newConfigPath) || !QFile::exists(oldConfigPath)) return;
+
+  QFile::copy(oldConfigPath, newConfigPath);
+}
+}  // namespace
 
 QString LibQNapi::appExecutableFilePath = "";
 QString LibQNapi::appExecutableDir = "";
@@ -56,8 +74,9 @@ const QNapiConfig LibQNapi::loadConfig() {
   if (LibQNapi::isPortableMode())
     return LibQNapi::configReader()->readPortableConfig(
         LibQNapi::portableConfigPath());
-  else
-    return LibQNapi::configReader()->readUserConfig();
+
+  migrateConfigFromQNapiIfNeeded();
+  return LibQNapi::configReader()->readUserConfig();
 }
 
 void LibQNapi::writeConfig(const QNapiConfig& config) {
@@ -73,7 +92,7 @@ bool LibQNapi::isPortableMode() {
 }
 
 QString LibQNapi::portableConfigPath() {
-  return appExecutableDir + QDir::separator() + "qnapi.ini";
+  return appExecutableDir + QDir::separator() + "subnapi.ini";
 }
 
 QString LibQNapi::uiLanguage(const GeneralConfig& generalConfig) {

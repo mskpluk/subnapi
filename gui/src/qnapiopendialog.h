@@ -17,7 +17,7 @@
 
 #include "config/staticconfig.h"
 
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -39,18 +39,10 @@ class QNapiOpenDialog : public QFileDialog {
   bool selectFiles();
   bool selectDirectory();
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-  QStringList selectedFiles() const;
-#endif
-
  private:
   bool placeWindow();
 
   QSharedPointer<const StaticConfig> staticConfig;
-
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-  QStringList files;
-#endif
 };
 
 #endif

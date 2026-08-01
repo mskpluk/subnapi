@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
   const QNapiConfig config = LibQNapi::loadConfig();
 
-  QNapiApp app(argc, argv, "QNapi");
+  QNapiApp app(argc, argv, "Subnapi");
 
   GuiMain::regSignal();
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
           if (QMessageBox::question(
                   0, QObject::tr("First Run"),
                   QObject::tr("This is the first launch of the "
-                              "program QNapi. Do you want to "
+                              "program Subnapi. Do you want to "
                               "configure it now?"),
                   QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
             app.showSettings();

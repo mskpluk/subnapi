@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Zaregistruj mime type
+        xdg-mime install --system /usr/share/subnapi/napiprojekt-mime.xml 2>/dev/null || true
+
+        # Zaregistruj URI handler
+        xdg-desktop-menu install --system /usr/share/applications/subnapi-uri.desktop 2>/dev/null || true
+
+        # Update desktop database
+        update-desktop-database /usr/share/applications 2>/dev/null || true
+
+        # Update mime database
+        update-mime-database /usr/share/mime 2>/dev/null || true
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

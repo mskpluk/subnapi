@@ -1,8 +1,8 @@
 TEMPLATE = app
 
-CONFIG += warn_on qt resources silent c++11
+CONFIG += warn_on qt resources silent c++17
 
-QT += core network xml gui widgets
+QT += core network xml gui widgets dbus
 
 SOURCES += src/main.cpp \
     src/forms/frmprogress.cpp \
@@ -15,13 +15,16 @@ SOURCES += src/main.cpp \
     src/forms/frmopensubtitlesconfig.cpp \
     src/forms/frmnapisy24config.cpp \
     src/forms/frmconvert.cpp \
+    src/forms/frmnapiprojektupload.cpp \
+    src/forms/frmnapiprojektscan.cpp \
     src/forms/subdatawidget.cpp \
     src/qcumber/qmanagedrequest.cpp \
     src/qcumber/qmanagedsocket.cpp \
     src/qcumber/qsingleapplication.cpp \
     src/qnapiopendialog.cpp \
     src/qnapiapp.cpp \
-    src/guimain.cpp
+    src/guimain.cpp \
+    src/utils/notificationservice.cpp
 
 HEADERS += src/forms/frmprogress.h \
     src/forms/frmlistsubtitles.h \
@@ -33,6 +36,8 @@ HEADERS += src/forms/frmprogress.h \
     src/forms/frmopensubtitlesconfig.h \
     src/forms/frmnapisy24config.h \
     src/forms/frmconvert.h \
+    src/forms/frmnapiprojektupload.h \
+    src/forms/frmnapiprojektscan.h \
     src/forms/subdatawidget.h \
     src/qcumber/qmanagedrequest.h \
     src/qcumber/qmanagedsocket.h \
@@ -42,7 +47,8 @@ HEADERS += src/forms/frmprogress.h \
     src/qnapithread.h \
     src/qnapiopendialog.h \
     src/qnapiapp.h \
-    src/guimain.h
+    src/guimain.h \
+    src/utils/notificationservice.h
 
 FORMS += ui/frmprogress.ui \
     ui/frmlistsubtitles.ui \
@@ -51,6 +57,8 @@ FORMS += ui/frmprogress.ui \
     ui/frmoptions.ui \
     ui/frmabout.ui \
     ui/frmconvert.ui \
+    ui/frmnapiprojektupload.ui \
+    ui/frmnapiprojektscan.ui \
     ui/subDataWidget.ui \
     ui/napiprojekt/frmnapiprojektconfig.ui \
     ui/opensubtitles/frmopensubtitlesconfig.ui \
@@ -66,49 +74,13 @@ INCLUDEPATH = src
 include(../qnapi.pri)
 include(../libqnapi/libqnapi.pri)
 
-unix:!macx {
-    TARGET = qnapi
-    DESTDIR = ../
-    CONFIG += link_pkgconfig
-    PKGCONFIG += libmediainfo
-}
+TARGET = subnapi
+DESTDIR = ../
+CONFIG += link_pkgconfig
+PKGCONFIG += libmediainfo
 
-macx {
-    SOURCES += src/utils/infoplistdockicon.cpp
-    HEADERS += src/utils/infoplistdockicon.h
+SOURCES += src/qcumber/qinterprocesschannel.cpp
+HEADERS += src/qcumber/qinterprocesschannel.h
 
-    TARGET = QNapi
-    DESTDIR = $${OUTDIR}
-
-    LIBS += -framework CoreFoundation
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
-    QMAKE_CXXFLAGS_X86_64 = -mmacosx-version-min=10.8
-    ICON = $${OUTDIR}/qnapi.icns
-    QMAKE_INFO_PLIST = $${OUTDIR}/Info.plist
-    7ZIP_BINARY.files = $${OUTDIR}/content/7za
-    7ZIP_BINARY.path = Contents/Resources
-    LIBMEDIAINFO.files = ../deps/libmediainfo/lib/libmediainfo.0.dylib
-    LIBMEDIAINFO.path = Contents/MacOS
-    QMAKE_BUNDLE_DATA += 7ZIP_BINARY LIBMEDIAINFO
-}
-
-!win32 {
-    SOURCES += src/qcumber/qinterprocesschannel.cpp
-    HEADERS += src/qcumber/qinterprocesschannel.h
-
-    !macx {
-        target.path = $${INSTALL_PREFIX}/bin
-        INSTALLS += target
-    }
-}
-
-win32 {
-    CONFIG += nostrip
-    SOURCES += src/qcumber/qinterprocesschannel_win32.cpp
-    HEADERS += src/qcumber/qinterprocesschannel_win32.h
-    RC_FILE = $${OUTDIR}/qnapi.rc
-    TARGET = qnapi
-
-    target.path = $${INSTALL_PREFIX}
-    INSTALLS += target
-}
+target.path = $${INSTALL_PREFIX}/bin
+INSTALLS += target

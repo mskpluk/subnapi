@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Actions=SubnapiDownload;
+Name=Download subtitles with Subnapi
+GenericName=Download subtitles with Subnapi
+Name[it_IT]=Scarica sottotitoli con Subnapi
+GenericName[it_IT]=Scarica sottotitoli con Subnapi
+Name[pl_PL]=Pobierz napisy do filmu z Subnapi
+GenericName[pl_PL]=Pobierz napisy do filmu z Subnapi
+Icon=subnapi
+ServiceTypes=video/x-msvideo,video/x-ms-asf,video/mpeg,video/x-ms-wmv,video/mp4,video/quicktime,video/x-theora,video/x-matroska,video/3gpp,application/vnd.rn-realmedia,application/vnd.rn-realmedia-vbr
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+Type=Service
+
+[Desktop Action SubnapiDownload]
+Name=Download subtitles with Subnapi
+Name[it_IT]=Scarica sottotitoli con Subnapi
+Name[pl_PL]=Pobierz napisy do filmu z Subnapi
+Exec=subnapi %F
+Icon=subnapi

@@ -18,7 +18,7 @@
 #include "qnapiopendialog.h"
 
 #include <QDesktopServices>
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -38,7 +38,7 @@ frmConvert::frmConvert(QWidget *parent, Qt::WindowFlags f)
   setAttribute(Qt::WA_QuitOnClose, false);
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 
   ui.lbDetectedFormatValue->setText("");

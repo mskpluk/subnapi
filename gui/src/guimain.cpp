@@ -19,11 +19,16 @@
 #include <QLibraryInfo>
 #include <QMessageBox>
 #include <QProcess>
+#include <QRegularExpression>
+#include <QFileDialog>
 #include <iostream>
 #include "config/qnapiconfig.h"
 #include "libqnapi.h"
 #include "qnapicommand.h"
 #include "utils/helphelper.h"
+#include "engines/napiprojektdownloadengine.h"
+#include "utils/p7zipdecoder.h"
+#include "utils/notificationservice.h"
 
 namespace GuiMain {
 
@@ -60,6 +65,47 @@ int processCommand(QNapiApp &app, QVariant cliCommand,
     QStringList movieFilePaths =
         cliCommand.value<DownloadSubtitles>().movieFilePaths;
 
+    // Check if this is a napiprojekt: link
+    if (movieFilePaths.size() == 1 && 
+        movieFilePaths.first().startsWith("napiprojekt:", Qt::CaseInsensitive)) {
+      
+      QString hash = movieFilePaths.first();
+      QString language = config.generalConfig().language();
+      if (language.isEmpty()) language = "PL";
+      
+      QString saveFilePath = QFileDialog::getSaveFileName(
+        nullptr,
+        QObject::tr("Save subtitles as"),
+        QString("subtitles.srt"),
+        QObject::tr("Subtitle files (*.srt *.txt *.sub);;All files (*.*)")
+      );
+      
+      if (saveFilePath.isEmpty()) {
+        return 0;
+      }
+      
+      QString tmpPath = config.generalConfig().tmpPath();
+      QString p7zipPath = config.generalConfig().p7zipPath();
+      EngineConfig engineConfig = config.enginesConfig()["NapiProjekt"];
+      QSharedPointer<const P7ZipDecoder> p7zipDecoder = 
+          LibQNapi::p7zipDecoder(p7zipPath);
+      
+      NapiProjektDownloadEngine engine(tmpPath, engineConfig, p7zipDecoder);
+      
+      if (engine.downloadFromHashXml(hash, language, saveFilePath)) {
+        NotificationService::showInfo(
+            QObject::tr("Subnapi"),
+            QObject::tr("Subtitles downloaded successfully!"),
+            config.generalConfig().desktopNotificationsEnabled());
+        return 0;
+      } else {
+        QMessageBox::critical(nullptr, 
+          QObject::tr("Subnapi - Error"), 
+          QObject::tr("Failed to download subtitles"));
+        return 1;
+      }
+    }
+
     if (!app.isInstanceAllowed()) {
       foreach (QString movieFilePath, movieFilePaths) {
         QFileInfo fi(movieFilePath);
@@ -79,7 +125,7 @@ int processCommand(QNapiApp &app, QVariant cliCommand,
 }
 
 void showHelpText(const QString &helpText) {
-  QMessageBox helpDialog(QMessageBox::Information, "QNapi", helpText,
+  QMessageBox helpDialog(QMessageBox::Information, "Subnapi", helpText,
                          QMessageBox::Close);
 
   QSpacerItem *horizontalSpacer =
@@ -95,7 +141,7 @@ void showHelpText(const QString &helpText) {
 void showHelpLanguages(const QNapiConfig &config) {
   QStringList helpLanguagesLines;
   helpLanguagesLines << tr(
-      "List of languages recognized by QNapi, including corresponding");
+      "List of languages recognized by Subnapi, including corresponding");
   helpLanguagesLines << tr("two-letter language codes:");
   helpLanguagesLines << "";
 
@@ -127,23 +173,17 @@ void showHelpLanguages(const QNapiConfig &config) {
 }
 
 void showArgParserError(const QString &errorMessage) {
-  QMessageBox::critical(0, tr("QNapi - command line argument parsing error"),
+  QMessageBox::critical(0, tr("Subnapi - command line argument parsing error"),
                         errorMessage, QMessageBox::Close);
 }
 
-static QString cliExecutableName =
-#ifdef Q_OS_WIN
-    "qnapic.exe";
-#else
-    "qnapic";
-#endif
+static QString cliExecutableName = "subnapic";
 
 Maybe<QString> cliExecutablePath() {
   QStringList searchPaths = {LibQNapi::appExecutableDir};
 
-#ifndef Q_OS_WIN
   searchPaths << QProcess::systemEnvironment()
-                     .filter(QRegExp("^PATH=(.*)$"))
+                     .filter(QRegularExpression("^PATH=(.*)$"))
                      .value(0)
                      .mid(5)
                      .split(":")
@@ -151,7 +191,6 @@ Maybe<QString> cliExecutablePath() {
               << "/usr/bin"
               << "/usr/local/bin";
   searchPaths.removeAll("");
-#endif
 
   foreach (QString path, searchPaths) {
     QString candidate = path + QDir::separator() + cliExecutableName;
@@ -168,8 +207,8 @@ bool isCLIAvailable() { return cliExecutablePath(); }
 int runCLI(const QStringList &args) {
   auto maybeCliExecutablePath = cliExecutablePath();
   if (!maybeCliExecutablePath) {
-    QMessageBox::critical(0, tr("QNapi - CLI executable not found"),
-                          tr("You have requested to run QNapi in command-line "
+    QMessageBox::critical(0, tr("Subnapi - CLI executable not found"),
+                          tr("You have requested to run Subnapi in command-line "
                              "mode, but unfortunately command-line binary '%1' "
                              "could not be found.")
                               .arg(cliExecutableName),
@@ -189,29 +228,24 @@ void installTranslation(QCoreApplication &app, QTranslator *qtTranslator,
   qtTranslator->load("qt_" + uiLanguage, resourceDir);
   app.installTranslator(qtTranslator);
 
-  translator->load("qnapi_" + uiLanguage, ":/translations");
+  translator->load("subnapi_" + uiLanguage, ":/translations");
   app.installTranslator(translator);
 }
 
 void regSignal() {
-#ifdef Q_OS_WIN
-  signal(SIGTERM, sigHandler);
-  signal(SIGINT, sigHandler);
-#else
   struct sigaction sa;
   memset(&sa, 0, sizeof(struct sigaction));
   sigemptyset(&sa.sa_mask);
   sa.sa_handler = sigHandler;
   sigaction(SIGTERM, &sa, 0);
   sigaction(SIGINT, &sa, 0);
-#endif
 }
 
 void sigHandler(int sig) {
   Q_UNUSED(sig);
 
   std::cout << std::endl
-            << QObject::tr("QNapi: deleting temporary files...").toStdString()
+            << QObject::tr("Subnapi: deleting temporary files...").toStdString()
             << std::endl;
 
   const QNapiConfig config = LibQNapi::loadConfig();
@@ -219,14 +253,14 @@ void sigHandler(int sig) {
   QDir tmpDir(tmpPath);
 
   QStringList filters;
-  filters << "QNapi-*-rc";
-  filters << "QNapi.*.tmp";
+  filters << "Subnapi-*-rc";
+  filters << "Subnapi.*.tmp";
 
   QFileInfoList files = tmpDir.entryInfoList(filters);
 
   foreach (QFileInfo file, files) { QFile::remove(file.filePath()); }
 
-  std::cout << QObject::tr("QNapi: finished.").toStdString() << std::endl;
+  std::cout << QObject::tr("Subnapi: finished.").toStdString() << std::endl;
 
   exit(666);
 }

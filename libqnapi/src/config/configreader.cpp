@@ -18,6 +18,7 @@
 #include <QFileInfo>
 #include <QLocale>
 #include <QProcess>
+#include <QRegularExpression>
 #include "subtitlelanguage.h"
 
 ConfigReader::ConfigReader(
@@ -29,8 +30,15 @@ ConfigReader::ConfigReader(
       enginesRegistry(enginesRegistry) {}
 
 const QNapiConfig ConfigReader::readUserConfig() const {
+  // "subnapi" here is the QSettings *organization* name, which Qt uses to
+  // build the file path (~/.config/subnapi.ini on Linux). Deliberately NOT
+  // renaming the "qnapi/..." section/key strings used throughout this file
+  // and configwriter.cpp - those are the on-disk section names inside that
+  // ini file, and keeping them as "qnapi" is what lets a config copied over
+  // from the old ~/.config/qnapi.ini (see LibQNapi's first-run migration)
+  // still be read correctly by this renamed app.
   return readConfig(
-      QSettings(QSettings::IniFormat, QSettings::UserScope, "qnapi"));
+      QSettings(QSettings::IniFormat, QSettings::UserScope, "subnapi"));
 }
 
 const QNapiConfig ConfigReader::readPortableConfig(
@@ -82,7 +90,8 @@ const GeneralConfig ConfigReader::readGeneralConfig(
           settings.value("qnapi/download_policy", DP_SHOW_LIST_IF_NEEDED)
               .toInt()),
       settings.value("qnapi/change_permissions", false).toBool(),
-      settings.value("qnapi/permissions", "644").toString());
+      settings.value("qnapi/permissions", "644").toString(),
+      settings.value("qnapi/desktop_notifications", true).toBool());
 
   auto cfg1 = resolveP7zipPath(cfg);
   auto cfg2 = resolveTmpPath(cfg1);
@@ -105,7 +114,7 @@ const QList<QPair<QString, bool>> ConfigReader::readEnabledEngines(
     QList<QPair<QString, bool>> enabledEngines;
     foreach (QString engineEnableStr, enabledEnginesStr) {
       QStringList engineParts =
-          engineEnableStr.split(":", QString::SkipEmptyParts);
+          engineEnableStr.split(":", Qt::SkipEmptyParts);
       if (engineParts.size() != 2) {
         return defaultEnabledEngines;
       }
@@ -140,7 +149,6 @@ const PostProcessingConfig ConfigReader::readPostProcessingConfig(
       settings.value("qnapi/enc_from", "windows-1250").toString(),
       settings.value("qnapi/auto_detect_encoding", true).toBool(),
       settings.value("qnapi/enc_to", "UTF-8").toString(),
-      settings.value("qnapi/show_all_encodings", false).toBool(),
       settings.value("qnapi/sub_format", "srt").toString(),
       settings.value("qnapi/sub_ext", "").toString(),
       settings.value("qnapi/skip_convert_ads", false).toBool(),
@@ -167,12 +175,10 @@ const GeneralConfig ConfigReader::resolveP7zipPath(
   } else {
     QString p7zipPath = "";
 
-#ifdef Q_OS_WIN
-    p7zipPath = QFileInfo(appExecutableDir + "/7za.exe").absoluteFilePath();
-#else
-
     QString pathEnv =
-        QProcess::systemEnvironment().filter(QRegExp("^PATH=(.*)$")).value(0);
+        QProcess::systemEnvironment()
+            .filter(QRegularExpression("^PATH=(.*)$"))
+            .value(0);
     QStringList sysPaths = pathEnv.mid(5).split(":");
     sysPaths.removeAll("");
     sysPaths.append(".");
@@ -184,10 +190,6 @@ const GeneralConfig ConfigReader::resolveP7zipPath(
     }
 
     sysPaths << appExecutableDir;
-
-#ifdef Q_OS_MAC
-    sysPaths << QFileInfo(appExecutableDir + "/../Resources/").absolutePath();
-#endif
 
     QStringList p7zipBinaries = {"7z", "7za"};
 
@@ -208,7 +210,6 @@ const GeneralConfig ConfigReader::resolveP7zipPath(
     if (p7zipPath.isEmpty()) {
       p7zipPath = "7z";
     }
-#endif
 
     return config.setP7zipPath(p7zipPath);
   }

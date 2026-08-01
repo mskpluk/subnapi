@@ -13,7 +13,7 @@
 *****************************************************************************/
 
 #include "libmediainfomovieinfoprovider.h"
-#include <QRegExp>
+#include <QRegularExpression>
 #include <string>
 
 #ifndef UNICODE
@@ -24,14 +24,8 @@
 #define _UNICODE
 #endif
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-#include "MediaInfoDLL/MediaInfoDLL.h"  //Dynamicly-loaded library (.dll or .so)
-#define MediaInfoNameSpace MediaInfoDLL;
-#else
-#include "MediaInfo/MediaInfo.h"  //Staticly-loaded library (.lib or .a or .so)
-#define MediaInfoNameSpace MediaInfoLib;
-#endif
-using namespace MediaInfoNameSpace;
+#include "MediaInfo/MediaInfo.h"
+using namespace MediaInfoLib;
 
 const Maybe<MovieInfo> LibmediainfoMovieInfoProvider::getMovieInfo(
     const QString& moviePath) const {
@@ -51,23 +45,26 @@ const Maybe<MovieInfo> LibmediainfoMovieInfoProvider::getMovieInfo(
 
   mi.Close();
 
-  QRegExp rWidth("(\\d+)");
-  if (rWidth.indexIn(widthS) == -1) return nothing();
+  QRegularExpressionMatch mWidth = QRegularExpression("(\\d+)").match(widthS);
+  if (!mWidth.hasMatch()) return nothing();
 
-  QRegExp rHeight("(\\d+)");
-  if (rHeight.indexIn(heightS) == -1) return nothing();
+  QRegularExpressionMatch mHeight =
+      QRegularExpression("(\\d+)").match(heightS);
+  if (!mHeight.hasMatch()) return nothing();
 
-  QRegExp rFrameRate("(\\d+).(\\d+)");
-  if (rFrameRate.indexIn(frameRateS) == -1) return nothing();
-  long frFloor = rFrameRate.cap(1).toLong();
-  long frFrac = rFrameRate.cap(2).toLong();
+  QRegularExpressionMatch mFrameRate =
+      QRegularExpression("(\\d+).(\\d+)").match(frameRateS);
+  if (!mFrameRate.hasMatch()) return nothing();
+  long frFloor = mFrameRate.captured(1).toLong();
+  long frFrac = mFrameRate.captured(2).toLong();
 
-  QRegExp rDuration("(\\d+)");
-  if (rDuration.indexIn(durationS) == -1) return nothing();
+  QRegularExpressionMatch mDuration =
+      QRegularExpression("(\\d+)").match(durationS);
+  if (!mDuration.hasMatch()) return nothing();
 
-  MovieInfo info(rWidth.cap(1).toInt(), rHeight.cap(1).toInt(),
+  MovieInfo info(mWidth.captured(1).toInt(), mHeight.captured(1).toInt(),
                  (double)frFloor + (double)frFrac / 1000.0,
-                 rDuration.cap(1).toDouble() / 1000.0);
+                 mDuration.captured(1).toDouble() / 1000.0);
 
   return just<MovieInfo>(info);
 }

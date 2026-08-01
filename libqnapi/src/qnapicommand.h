@@ -33,6 +33,14 @@ struct ScanDirectory {
   QString directory;
 };
 
+struct UploadSubtitles {
+  QString videoFilePath;
+  QString subtitleFilePath;
+  QString author;
+  QString comment;  // only used when correction is true
+  bool correction;
+};
+
 // not implemented yet
 // struct ConvertSubtitles {
 //  QString subtitlesPath;
@@ -49,6 +57,7 @@ struct ShowHelpLanguages {};
 Q_DECLARE_METATYPE(QNapiCommand::RunCLIApp)
 Q_DECLARE_METATYPE(QNapiCommand::DownloadSubtitles)
 Q_DECLARE_METATYPE(QNapiCommand::ScanDirectory)
+Q_DECLARE_METATYPE(QNapiCommand::UploadSubtitles)
 // not implemented yet
 // Q_DECLARE_METATYPE(QNapiGuiCommand::ConvertSubtitles)
 Q_DECLARE_METATYPE(QNapiCommand::ShowOptions)

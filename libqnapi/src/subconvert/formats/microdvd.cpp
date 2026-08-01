@@ -13,13 +13,13 @@
 *****************************************************************************/
 
 #include "microdvd.h"
+#include <QRegularExpression>
 
 bool MicroDVDSubtitleFormat::detect(const QStringList &lines) const {
   foreach (QString line, lines) {
     if (!line.trimmed().isEmpty()) {
-      QRegExp r("^\\{(\\d+)\\}\\{(\\d+)\\}(.*)");
-      r.setPatternSyntax(QRegExp::RegExp2);
-      return r.exactMatch(line);
+      QRegularExpression r("^\\{(\\d+)\\}\\{(\\d+)\\}(.*)");
+      return r.match(line).hasMatch();
     }
   }
 
@@ -31,13 +31,13 @@ SubFile MicroDVDSubtitleFormat::decode(const QStringList &lines) const {
 
   foreach (QString line, lines) {
     if (!line.trimmed().isEmpty()) {
-      QRegExp r("^\\{(\\d+)\\}\\{(\\d+)\\}(.*)");
-      r.setPatternSyntax(QRegExp::RegExp2);
-      if (r.exactMatch(line)) {
+      QRegularExpression r("^\\{(\\d+)\\}\\{(\\d+)\\}(.*)");
+      QRegularExpressionMatch m = r.match(line);
+      if (m.hasMatch()) {
         SubEntry se;
-        se.frameStart = r.cap(1).toLong();
-        se.frameStop = r.cap(2).toLong();
-        QString tokenStream = r.cap(3);
+        se.frameStart = m.captured(1).toLong();
+        se.frameStop = m.captured(2).toLong();
+        QString tokenStream = m.captured(3);
 
         se.tokens = decodeTokenStream(tokenStream);
 

@@ -14,6 +14,7 @@
 
 #include "napiprojektdownloadengine.h"
 #include "subtitlelanguage.h"
+#include "utils/legacycodecs.h"
 #include "utils/synchttp.h"
 
 #include <cmath>
@@ -22,19 +23,10 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcess>
+#include <QStringConverter>
+#include <QStringDecoder>
+#include <QXmlStreamReader>
 #include <QUrl>
-
-#ifdef Q_OS_WIN  // for SetFileAttributes
-#include <qt_windows.h>
-#endif
-
-// This sadly has to be added in order to build under VS >= 2005
-#ifdef _MSC_VER
-// from Visual Studio 2005 onwards
-// https://msdn.microsoft.com/en-us/library/2ts7cx93%28v=vs.80%29.aspx
-#include <stdio.h>
-#define snprintf _snprintf_s
-#endif
 
 namespace NapiProjektDownloadEngineConsts {
 const unsigned long NAPI_10MB = 10485760;
@@ -45,14 +37,6 @@ const QString napiDownloadUrlTpl =
     "?l=%1&f=%2&t=%3&v=other&kolejka=false&nick=%4&pass=%5&napios=%6";
 const QString napiCheckUserUrlTpl =
     "http://www.napiprojekt.pl/users_check.php?nick=%1&pswd=%2";
-const QString napiUploadUrlTpl =
-    "http://www.napiprojekt.pl/unit_napisy/upload.php"
-    "?m_length=%1&m_resolution=%2x%3&m_fps=%4&m_hash=%5&m_filesize=%6";
-const QString napiUploadUrlSimpleTpl =
-    "http://www.napiprojekt.pl/unit_napisy/upload.php"
-    "?m_hash=%5&m_filesize=%6";
-const QString napiReportBadUrlTpl =
-    "http://www.napiprojekt.pl/unit_napisy/zlenapisyadd.php";
 }  // namespace NapiProjektDownloadEngineConsts
 
 using namespace NapiProjektDownloadEngineConsts;
@@ -239,14 +223,160 @@ QString NapiProjektDownloadEngine::npLangWrapper(QString lang) const {
   return lang;
 }
 
-QString NapiProjektDownloadEngine::napiOS() const {
-#if defined(Q_OS_WIN)
-  return "Windows";
-#elif defined(Q_OS_MAC)
-  return "Mac OS X";
-#else
-  return "Linux/UNIX";
-#endif
+QString NapiProjektDownloadEngine::napiOS() const { return "Linux/UNIX"; }
+
+QString NapiProjektDownloadEngine::normalizeHash(const QString& hash) const {
+  QString normalizedHash = hash;
+  if (normalizedHash.startsWith("napiprojekt:", Qt::CaseInsensitive)) {
+    normalizedHash = normalizedHash.mid(12).toLower();
+  }
+  return normalizedHash;
+}
+
+QString NapiProjektDownloadEngine::downloadXmlForHash(const QString& hash, const QString& lang) const {
+  QString normalizedHash = normalizeHash(hash);
+
+  QString url = "http://napiprojekt.pl/api/api-napiprojekt3.php";
+  
+  QByteArray postData;
+  postData.append("mode=17&");
+  postData.append("client=NapiProjektPython&");
+  postData.append("client_ver=0.1&");
+  postData.append("user_nick=&");
+  postData.append("user_password=&");
+  postData.append("downloaded_subtitles_id=");
+  postData.append(normalizedHash.toUtf8());
+  postData.append("&downloaded_subtitles_lang=");
+  postData.append(lang.toUtf8());
+  postData.append("&the=end");
+
+  SyncHTTP http;
+  QUrl requestUrl(url);
+  QNetworkRequest request{requestUrl};
+  request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+  
+  QNetworkReply *reply = http.syncPost(request, postData);
+  
+  if (reply->error() != QNetworkReply::NoError) {
+    return QString();
+  }
+  
+  return QString::fromUtf8(reply->readAll());
+}
+
+QString NapiProjektDownloadEngine::extractSubtitlesFromXml(
+    const QString& xmlContent, const QString& hash) const {
+  if (!xmlContent.contains("<status>success</status>")) {
+    return QString();
+  }
+  
+  QXmlStreamReader xml(xmlContent);
+  QString base64Content;
+  bool inSubtitlesTag = false;
+  bool inContentTag = false;
+  
+  while (!xml.atEnd()) {
+    xml.readNext();
+    
+    if (xml.isStartElement()) {
+      if (xml.name() == "subtitles") {
+        inSubtitlesTag = true;
+      } else if (inSubtitlesTag && xml.name() == "content") {
+        inContentTag = true;
+      }
+    } else if (xml.isEndElement()) {
+      if (xml.name() == "subtitles") {
+        inSubtitlesTag = false;
+      } else if (xml.name() == "content") {
+        inContentTag = false;
+      }
+    } else if (xml.isCDATA() && inContentTag) {
+      base64Content = xml.text().toString();
+    }
+  }
+  
+  if (base64Content.isEmpty()) {
+    return QString();
+  }
+  
+  // Decode base64
+  QByteArray compressedData = QByteArray::fromBase64(base64Content.toUtf8());
+  
+  if (compressedData.isEmpty()) {
+    return QString();
+  }
+  
+  // Save to a temporary archive
+  QString tmpArchive = tmpPath + "/qnapi_hash.7z";
+  QFile archiveFile(tmpArchive);
+  if (!archiveFile.open(QIODevice::WriteOnly)) {
+    return QString();
+  }
+  archiveFile.write(compressedData);
+  archiveFile.close();
+  
+  // Unpack
+  bool unpacked = p7zipDecoder->unpackSecureArchiveFiles(tmpArchive, napiZipPassword, tmpPath);
+  
+  if (!unpacked) {
+    QFile::remove(tmpArchive);
+    return QString();
+  }
+  
+  // Subtitles from napiprojekt are always stored in the archive as
+  // <hash>.txt - we read exactly that file instead of guessing by
+  // modification time, so we don't pick up a random .txt/.srt file left
+  // in tmpPath by another process sharing the same temp directory.
+  QString subtitleFile = tmpPath + "/" + normalizeHash(hash) + ".txt";
+
+  QString result;
+  if (QFile::exists(subtitleFile)) {
+    QFile file(subtitleFile);
+    if (file.open(QIODevice::ReadOnly)) {
+      QByteArray rawData = file.readAll();
+      file.close();
+
+      // --- Subtitle encoding detection ---
+      // Try to detect a UTF encoding via BOM (UTF-8, UTF-16, UTF-32)
+      auto utfEncoding = QStringConverter::encodingForData(rawData);
+      if (utfEncoding) {
+        result = QStringDecoder(*utfEncoding).decode(rawData);
+      } else {
+        // If not UTF, it's most likely Windows-1250 (CP1250) - the standard encoding for Polish subtitles
+        result = LegacyCodecs::toUnicode(LegacyCodecs::Encoding::Windows1250,
+                                         rawData);
+      }
+      // --- End of encoding detection ---
+    }
+    QFile::remove(subtitleFile);
+  }
+  
+  QFile::remove(tmpArchive);
+  return result;
+}
+
+bool NapiProjektDownloadEngine::downloadFromHashXml(const QString& hash, const QString& lang, const QString& outputPath) {
+  QString xmlContent = downloadXmlForHash(hash, lang);
+  
+  if (xmlContent.isEmpty()) {
+    return false;
+  }
+  
+  QString subtitlesContent = extractSubtitlesFromXml(xmlContent, hash);
+  
+  if (subtitlesContent.isEmpty()) {
+    return false;
+  }
+  
+  QFile outFile(outputPath);
+  if (!outFile.open(QIODevice::WriteOnly)) {
+    return false;
+  }
+  
+  outFile.write(subtitlesContent.toUtf8());
+  outFile.close();
+  
+  return true;
 }
 
 const char *const NapiProjektDownloadEngine::pixmapData[] = {

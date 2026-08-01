@@ -22,19 +22,18 @@
 #include "engines/subtitledownloadenginesregistry.h"
 #include "subconvert/subtitleformatsregistry.h"
 
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QList>
 #include <QMessageBox>
 #include <QSharedPointer>
-#include <QTextCodec>
 
 class frmOptions : public QDialog {
   Q_OBJECT
  public:
-  frmOptions(QWidget *parent = 0, Qt::WindowFlags f = 0);
+  frmOptions(QWidget *parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
   ~frmOptions();
 
  public slots:
@@ -57,7 +56,6 @@ class frmOptions : public QDialog {
   void subFormatChanged(int format);
   void encodingMethodChanged(int method);
   void autoDetectEncodingClicked();
-  void showAllEncodingsClicked();
 
   void restoreDefaults();
 
@@ -67,7 +65,7 @@ class frmOptions : public QDialog {
   QSharedPointer<const SubtitleFormatsRegistry> subtitleFormatsRegistry;
   QSharedPointer<const SubtitleDownloadEnginesRegistry> enginesRegistry;
 
-  void showAllEncodings();
+  void populateEncodings();
 };
 
 #endif

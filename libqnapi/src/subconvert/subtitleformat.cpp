@@ -14,6 +14,7 @@
 
 #include "subtitleformat.h"
 #include <QMap>
+#include <QRegularExpression>
 
 QVector<SubToken> SubtitleFormat::decodeTokenStream(QString tokenStream) const {
   QVector<SubToken> tokens;
@@ -50,23 +51,22 @@ QVector<SubToken> SubtitleFormat::decodeTokenStream(QString tokenStream) const {
     }
 
     if (!matched) {
-      QRegExp colorR1("^\\{c:(.*)\\}");
-      colorR1.setPatternSyntax(QRegExp::RegExp2);
-      colorR1.setCaseSensitivity(Qt::CaseInsensitive);
+      QRegularExpression colorR1(
+          "^\\{c:(.*)\\}", QRegularExpression::CaseInsensitiveOption);
+      QRegularExpression colorR2("^<font color=(.*)>");
 
-      QRegExp colorR2("^<font color=(.*)>");
-      colorR1.setPatternSyntax(QRegExp::RegExp2);
-      colorR1.setCaseSensitivity(Qt::CaseInsensitive);
+      QRegularExpressionMatch match1 = colorR1.match(tokenStream);
+      QRegularExpressionMatch match2 = colorR2.match(tokenStream);
 
-      if (colorR1.indexIn(tokenStream) == 0) {
+      if (match1.hasMatch()) {
         tok.type = STT_FONTCOLOR;
-        tok.payload = parseColor(colorR1.cap(1));
-        tokenStream.remove(0, colorR1.cap(0).size());
+        tok.payload = parseColor(match1.captured(1));
+        tokenStream.remove(0, match1.captured(0).size());
         matched = true;
-      } else if (colorR2.indexIn(tokenStream) == 0) {
+      } else if (match2.hasMatch()) {
         tok.type = STT_FONTCOLOR;
-        tok.payload = parseColor(colorR2.cap(1));
-        tokenStream.remove(0, colorR2.cap(0).size());
+        tok.payload = parseColor(match2.captured(1));
+        tokenStream.remove(0, match2.captured(0).size());
         matched = true;
       } else if (tokenStream[0] == '/' && wordBuff.isEmpty()) {
         tok.type = STT_ITALIC;

@@ -26,11 +26,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>QNapi - subtitles download summary</string>
+   <string>Subnapi - subtitles download summary</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../res/resources.qrc">
-    <normaloff>:/icon/qnapi.png</normaloff>:/icon/qnapi.png</iconset>
+    <normaloff>:/icon/subnapi.png</normaloff>:/icon/subnapi.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

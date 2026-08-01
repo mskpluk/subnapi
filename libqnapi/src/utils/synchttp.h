@@ -19,6 +19,7 @@
 #define SYNCHTTP_H
 
 #include <QEventLoop>
+#include <QHttpMultiPart>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -31,6 +32,7 @@ class SyncHTTP : public QObject {
 
   QNetworkReply* syncGet(const QNetworkRequest& req);
   QNetworkReply* syncPost(const QNetworkRequest& req, const QByteArray& data);
+  QNetworkReply* syncPost(const QNetworkRequest& req, QHttpMultiPart* multiPart);
 
  private:
   QEventLoop loop;

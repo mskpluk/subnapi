@@ -1,22 +1,36 @@
 #!/bin/sh
+set -e
 
-make distclean
-export DST_DIR=../qnapi-$VERSION
-mkdir $DST_DIR
-cp -rv * $DST_DIR
-find $DST_DIR | grep .git | xargs rm -fr
-rm -fr $DST_DIR/deps/libmediainfo
-rm -fr $DST_DIR/win32/content/7za.exe
-rm -fr $DST_DIR/macx/content/7za
-rm -fr $DST_DIR/macx/QNapi*app
-rm -fr $DST_DIR/macx/QNapi*dmg
-rm -fr $DST_DIR/libqnapi/tmp
-rm -fr $DST_DIR/gui/tmp
-rm -fr $DST_DIR/tmp
-rm -fr $DST_DIR/appveyor.yml
-rm -fr $DST_DIR/.travis.yml
-rm -fr $DST_DIR/qnapi
-rm -fr $DST_DIR/QNapi*.AppImage
-tar -zcvf qnapi-$VERSION.tar.gz $DST_DIR
-rm -fr $DST_DIR
+cd "$(dirname "$0")/.."
 
+VERSION=$(scripts/version.sh)
+if [ -z "$VERSION" ]; then
+    echo "Could not determine version from libqnapi/src/version.h" >&2
+    exit 1
+fi
+
+DST_DIR="../subnapi-$VERSION"
+
+if [ -e Makefile ]; then
+    make distclean
+fi
+
+rm -rf "$DST_DIR"
+mkdir "$DST_DIR"
+
+# git ls-files enumerates exactly the tracked source tree: no .git
+# metadata, no build artifacts, no accidentally-skipped dotfiles, and
+# (since binaries with no source were removed from the tree) no
+# manual per-file exclusion list to keep in sync by hand. debian/ is
+# excluded separately - this project's Debian archive packaging lives
+# in its own repository, and shipping a debian/ directory inside an
+# upstream source tarball conflicts with that workflow.
+git ls-files | grep -v '^debian/' | while IFS= read -r f; do
+    mkdir -p "$DST_DIR/$(dirname "$f")"
+    cp "$f" "$DST_DIR/$f"
+done
+
+tar -zcf "../subnapi-$VERSION.tar.gz" -C .. "subnapi-$VERSION"
+rm -rf "$DST_DIR"
+
+echo "Created ../subnapi-$VERSION.tar.gz"

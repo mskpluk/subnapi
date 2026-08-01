@@ -27,7 +27,7 @@
 class frmConvert : public QDialog {
   Q_OBJECT
  public:
-  frmConvert(QWidget *parent = 0, Qt::WindowFlags f = 0);
+  frmConvert(QWidget *parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
   ~frmConvert() {}
 
  private:

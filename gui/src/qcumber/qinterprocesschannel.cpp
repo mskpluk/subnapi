@@ -56,14 +56,9 @@
 */
 QInterProcessChannel::QInterProcessChannel(QObject *p)
     : QThread(p), pServer(0), pServerTimer(0) {
-#ifdef Q_OS_WIN
-  rcFile = QDir::tempPath() + QDir::separator() +
-           QApplication::applicationName() + "rc";
-#else
   rcFile = QDir::tempPath() + QDir::separator() +
            QApplication::applicationName() + "-" + getenv("USER") + "-" +
            getenv("DISPLAY") + "-" + "rc";
-#endif
 
   init();
 }

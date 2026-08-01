@@ -37,10 +37,6 @@ QNapiOpenDialog::QNapiOpenDialog(QWidget* parent, const QString& caption,
 
   QStringList sideUrls;
 
-#ifdef Q_OS_MAC
-  sideUrls << "/Volumes";
-#endif
-
   sideUrls << QString(QDir::homePath() + "/Movies")
            << QString(QDir::homePath() + "/movies")
            << QString(QDir::homePath() + "/Video")
@@ -62,54 +58,23 @@ QNapiOpenDialog::QNapiOpenDialog(QWidget* parent, const QString& caption,
 }
 
 bool QNapiOpenDialog::selectFile() {
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-  files.clear();
-  QString file = getOpenFileName(this, windowTitle(), directory().path(),
-                                 nameFilters().join("\n"));
-
-  if (!file.isEmpty()) files << file;
-
-  return !file.isEmpty();
-#else
   if (!placeWindow()) return false;
   setFileMode(QFileDialog::ExistingFile);
   return exec();
-#endif
 }
 
 bool QNapiOpenDialog::selectFiles() {
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-  files = getOpenFileNames(this, windowTitle(), directory().path(),
-                           nameFilters().join("\n"));
-  return !files.isEmpty();
-#else
   if (!placeWindow()) return false;
   setFileMode(QFileDialog::ExistingFiles);
   return exec();
-#endif
 }
 
 bool QNapiOpenDialog::selectDirectory() {
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-  files.clear();
-  QString dir = getExistingDirectory(this, windowTitle(), directory().path());
-
-  if (dir == directory().path()) dir = "";
-
-  if (!dir.isEmpty()) files << dir;
-
-  return !dir.isEmpty();
-#else
   if (!placeWindow()) return false;
-  // QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ?
-  setFileMode(QFileDialog::DirectoryOnly);
+  setFileMode(QFileDialog::Directory);
+  setOption(QFileDialog::ShowDirsOnly);
   return exec();
-#endif
 }
-
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-QStringList QNapiOpenDialog::selectedFiles() const { return files; }
-#endif
 
 bool QNapiOpenDialog::placeWindow() {
   if (isVisible()) {
@@ -118,7 +83,7 @@ bool QNapiOpenDialog::placeWindow() {
   }
 
   QRect position = frameGeometry();
-  position.moveCenter(QDesktopWidget().availableGeometry().center());
+  position.moveCenter(screen()->availableGeometry().center());
   move(position.topLeft());
 
   return true;

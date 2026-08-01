@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Actions=SubnapiScan;
+Name=Scan directory and download subtitles
+GenericName=Scan directory and download subtitles
+Name[it_IT]=Scansiona cartella e scarica sottotitoli
+GenericName[it_IT]=Scansiona cartella e scarica sottotitoli
+Name[pl_PL]=Przeskanuj katalog i pobierz napisy
+GenericName[pl_PL]=Przeskanuj katalogu i pobierz napisy
+Icon=subnapi
+ServiceTypes=inode/directory
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin
+Type=Service
+
+[Desktop Action SubnapiScan]
+Name=Scan directory and download subtitles
+Name[it_IT]=Scansiona cartella e scarica sottotitoli
+Name[pl_PL]=Przeskanuj katalog i pobierz napisy
+Exec=subnapi %U
+Icon=subnapi

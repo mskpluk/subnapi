@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>QNapi - Napisy24 configuration</string>
+   <string>Subnapi - Napisy24 configuration</string>
   </property>
   <layout class="QGridLayout">
    <item row="0" column="0">
