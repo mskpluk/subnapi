@@ -44,8 +44,12 @@ bool NotificationService::showDesktopNotification(const QString& title,
     return false;
   }
 
+  // Icon is resolved by name on the host: "subnapi" for a regular install
+  // (hicolor), the app id for Flatpak (only the exported, id-named icons
+  // are visible outside the sandbox).
+  QString iconName = qEnvironmentVariable("FLATPAK_ID", "subnapi");
   QDBusReply<uint> reply = notifications.call(
-      "Notify", "qnapi", static_cast<uint>(0), "qnapi", title, message,
+      "Notify", "subnapi", static_cast<uint>(0), iconName, title, message,
       QStringList(), QVariantMap(), 5000);
 
   return reply.isValid();
