@@ -45,34 +45,26 @@ has been inactive since 2022. Version 0.5.0 is the first Subnapi release.
 
 ## Installing
 
+Prebuilt packages are available on the
+[Releases](https://github.com/mskpluk/subnapi/releases) page.
+
 ### Debian / Ubuntu package
 
-A `.deb` built against Debian 13 "trixie" installs cleanly on Debian 13.x and
-Ubuntu 26.04 LTS. To build it reproducibly in a rootless Podman container
-(no sudo needed beyond installing Podman itself):
+The `.deb` is built against Debian 13 "trixie" and installs cleanly on
+Debian 13.x and Ubuntu 26.04 LTS:
 
 ```
-$ scripts/build-deb-trixie.sh
-```
-
-The package lands in `../subnapi-deb-build/`. Alternatively, on any
-Debian-based system with the build dependencies installed:
-
-```
-$ dpkg-buildpackage -us -uc -b
+$ sudo apt install ./subnapi_0.5.0-1_amd64.deb
 ```
 
 ### Flatpak
 
-```
-$ scripts/build-flatpak.sh
-```
-
-This builds and installs a per-user Flatpak from
-`flatpak/io.github.mskpluk.subnapi.yml` (runtime: `org.kde.Platform` 6.11).
-Requires `flatpak` and `flatpak-builder`. Then:
+The `.flatpak` bundle works on any distribution with Flatpak set up; the
+required runtime (`org.kde.Platform` 6.11) is fetched from Flathub
+automatically:
 
 ```
+$ flatpak install ./subnapi-0.5.0.flatpak
 $ flatpak run io.github.mskpluk.subnapi
 ```
 
@@ -97,6 +89,28 @@ This builds the GUI binary `subnapi` and the command-line client
 `cli/subnapic` (append `CONFIG+=no_cli` or `CONFIG+=no_gui` to the qmake
 invocation to skip one of them). `make install` respects `PREFIX`
 (default `/usr`).
+
+### Building the packages
+
+The `.deb` builds reproducibly in a rootless Podman container pinned to
+Debian 13.0 (no sudo needed beyond installing Podman itself); the package
+lands in `../subnapi-deb-build/`:
+
+```
+$ scripts/build-deb-trixie.sh
+```
+
+Alternatively, on any Debian-based system with the build dependencies
+installed: `dpkg-buildpackage -us -uc -b`.
+
+The Flatpak builds and installs per-user from
+`flatpak/io.github.mskpluk.subnapi.yml`; requires `flatpak` and
+`flatpak-builder`. `BUNDLE=1` additionally creates a distributable
+`.flatpak` bundle:
+
+```
+$ scripts/build-flatpak.sh
+```
 
 ## Usage
 
