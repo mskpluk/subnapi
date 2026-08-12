@@ -19,7 +19,22 @@
 #include <QRegularExpression>
 
 namespace {
-const int kTailLineCount = 10;
+const int kTailLineCount = 20;
+
+// Credit-line labels, most authoritative first. Order matters: a file can
+// carry several credits at once, and which one counts as "the author" is not
+// the last one in the file but the highest-ranking label. A person who
+// actually translated the dialogue outranks the studio or broadcaster that
+// commissioned it - on a file crediting both "Wersja polska: Canal +" and
+// "Tekst: Anna Maria Nowak" the author is Anna Maria Nowak. (The official
+// NapiProjekt client picks "canal +" here; that is the client being wrong,
+// not a convention worth copying.)
+//
+// "Korekta:", "Synchronizacja:" and similar are deliberately absent: they
+// credit proofreading and timing, not authorship.
+const char *const kAuthorLabels[] = {
+    "tłumaczenie", "tekst polski", "tekst", "napisy", "wersja polska",
+};
 }  // namespace
 
 QString detectSubtitleAuthor(const QString &subtitleFilePath) {
@@ -40,19 +55,26 @@ QString detectSubtitleAuthor(const QString &subtitleFilePath) {
   int startIdx = qMax(0, lines.size() - kTailLineCount);
   QString tail = lines.mid(startIdx).join("\n");
 
-  // Matches "Tłumaczenie:", "tłumaczenie:", "tekst polski:", "tekst:",
-  // "Tłumaczenie na zlecenie ...:" - anything starting with tłumaczenie/tekst
-  // up to the next colon, capturing what follows it.
-  static const QRegularExpression authorPattern(
-      "(?:tłumaczenie|tekst)[^:\\n]*:\\s*(.+)",
-      QRegularExpression::CaseInsensitiveOption);
+  // Each label is matched only at the start of a line, so a stray "tekst:" in
+  // the middle of a line of dialogue is not mistaken for a credit. The
+  // trailing "[^:\n]*" lets qualified variants through - "Tłumaczenie na
+  // zlecenie ...:", "Napisy i synchronizacja:" - capturing whatever follows
+  // the colon.
+  for (const char *const label : kAuthorLabels) {
+    QRegularExpression pattern(
+        QString("^\\s*%1[^:\\n]*:\\s*(.+)$").arg(QString::fromUtf8(label)),
+        QRegularExpression::CaseInsensitiveOption |
+            QRegularExpression::MultilineOption);
 
-  QString author;
-  QRegularExpressionMatchIterator it = authorPattern.globalMatch(tail);
-  while (it.hasNext()) {
-    // Several matches can occur in the tail (e.g. a stray "tekst:" in
-    // dialogue); the credit line is conventionally the last one.
-    author = it.next().captured(1).trimmed();
+    QString author;
+    QRegularExpressionMatchIterator it = pattern.globalMatch(tail);
+    while (it.hasNext()) {
+      // Within one label the credit is conventionally the last occurrence.
+      author = it.next().captured(1).trimmed();
+    }
+
+    if (!author.isEmpty()) return author;
   }
-  return author;
+
+  return QString();
 }
