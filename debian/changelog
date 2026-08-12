@@ -1,3 +1,13 @@
+subnapi (0.5.1-1) unstable; urgency=medium
+
+  * Detect subtitle authors from more credit lines when uploading to
+    NapiProjekt: recognise "Napisy:", widen the searched tail of the file,
+    and rank the labels so a translator credit wins over a broadcaster or
+    studio credit. Files crediting "Napisy: ..." were previously uploaded
+    with an empty author.
+
+ -- mskpluk <mskpluk@users.noreply.github.com>  Wed, 12 Aug 2026 09:00:00 +0000
+
 subnapi (0.5.0-1) unstable; urgency=medium
 
   * First Subnapi release. Subnapi is a Linux-only fork of QNapi

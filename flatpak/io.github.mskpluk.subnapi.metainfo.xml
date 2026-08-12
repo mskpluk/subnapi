@@ -36,6 +36,16 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.1" date="2026-08-12">
+      <description>
+        <p>
+          Detects subtitle authors from more credit lines when uploading to
+          NapiProjekt, and prefers a translator credit over a broadcaster or
+          studio credit. Files crediting "Napisy: ..." were previously
+          uploaded with no author at all.
+        </p>
+      </description>
+    </release>
     <release version="0.5.0" date="2026-08-01">
       <description>
         <p>
