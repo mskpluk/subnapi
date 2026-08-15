@@ -14,13 +14,47 @@
 
 #include "opensubtitlesdownloadengine.h"
 #include "subtitlelanguage.h"
+#include "utils/synchttp.h"
 
 #include <QDir>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QRegularExpression>
+#include <QUrl>
 
 namespace OpenSubtitlesDownloadEngineConst {
 const QString openSubtitlesXmlRpcUrl = "http://api.opensubtitles.org/xml-rpc";
-}
+
+// Subtitle files are fetched over plain HTTP rather than through the XML-RPC
+// DownloadSubtitles method. That method is not usable any more: for accounts
+// without VIP it answers 200 OK with a 102-byte placeholder advertising VIP
+// membership instead of the subtitles. This is not a quota or authentication
+// problem - it happens on a fully logged-in account with an untouched daily
+// allowance. The block is tied to the download links the API itself hands out,
+// which carry a "src-api" path segment; the same file behind the plain
+// download path below is served in full, and anonymously at that.
+//
+// The id substituted here is IDSubtitleFile - the same value lookForSubtitles()
+// already stores in SubtitleInfo::sourceLocation. The response is the subtitle
+// file itself, not an archive, so nothing needs unpacking.
+const QString openSubtitlesDownloadUrlTpl =
+    "https://dl.opensubtitles.org/en/download/file/%1";
+
+// A served subtitle file comes back as "application/force-download". Anything
+// else is the server answering with something other than the file - an HTML
+// page once the daily per-IP download limit is reached, for instance. Such a
+// response has to be rejected rather than written next to the movie, which is
+// what would otherwise happen: nothing further down the pipeline checks whether
+// what it got resembles subtitles.
+const QString openSubtitlesDownloadContentType = "application/force-download";
+
+// The placeholder served instead of the subtitles when a download is refused.
+// It is a valid, complete SubRip file with the right content type, so the check
+// above does not catch it. Matching on the advertised address rather than on an
+// exact size keeps working if the wording changes.
+const QString openSubtitlesVipPlaceholderMarker = "osdb.link/vip";
+const int openSubtitlesPlaceholderMaxSize = 1024;
+}  // namespace OpenSubtitlesDownloadEngineConst
 
 SubtitleDownloadEngineMetadata OpenSubtitlesDownloadEngine::metadata =
     SubtitleDownloadEngineMetadata(
@@ -153,28 +187,37 @@ bool OpenSubtitlesDownloadEngine::download(QUuid id) {
 
   SubtitleInfo s = ms.value();
 
-  QVariantList paramsList;
-  QVariantList requestList;
+  // Read the file id out before sourceLocation is reused below to hold the
+  // path the subtitles are written to.
+  QString subtitleFileId = s.sourceLocation;
+  if (subtitleFileId.isEmpty()) return false;
 
   subFileName = generateTmpFileName() + "." + s.format;
-  paramsList << s.sourceLocation;
-  requestList << (QVariant)paramsList;
 
-  QVariantList args;
-  args << token << requestList;
+  QUrl url(OpenSubtitlesDownloadEngineConst::openSubtitlesDownloadUrlTpl.arg(
+      subtitleFileId));
 
-  if (!rpc.request("DownloadSubtitles", args)) return false;
+  SyncHTTP http;
+  QNetworkReply *reply = http.syncGet(QNetworkRequest(url));
 
-  QVariantMap responseMap = rpc.getResponse().toMap();
+  if (reply->error() != QNetworkReply::NoError) return false;
 
-  if (!responseMap.contains("data")) return false;
+  if (!reply->header(QNetworkRequest::ContentTypeHeader)
+           .toString()
+           .startsWith(
+               OpenSubtitlesDownloadEngineConst::openSubtitlesDownloadContentType))
+    return false;
 
-  QVariantList responseList = responseMap["data"].toList();
+  QByteArray subtitleContent = reply->readAll();
 
-  if (responseList.size() == 0) return false;
+  if (subtitleContent.isEmpty()) return false;
 
-  QByteArray subtitleContent =
-      QByteArray::fromBase64(responseList.at(0).toMap()["data"].toByteArray());
+  if (subtitleContent.size() <=
+          OpenSubtitlesDownloadEngineConst::openSubtitlesPlaceholderMaxSize &&
+      subtitleContent.contains(
+          OpenSubtitlesDownloadEngineConst::openSubtitlesVipPlaceholderMarker
+              .toUtf8()))
+    return false;
 
   s.sourceLocation = generateTmpPath();
   QFile file(s.sourceLocation);
@@ -189,22 +232,24 @@ bool OpenSubtitlesDownloadEngine::download(QUuid id) {
   return (bool)r;
 }
 
+// download() now fetches the subtitle file itself rather than an archive, so
+// there is nothing left to unpack here. The step still exists because every
+// engine's download() is followed by unpack() (QNapi::download / QNapi::unpack),
+// and it is what gives the file the name the rest of the pipeline expects.
 bool OpenSubtitlesDownloadEngine::unpack(QUuid id) {
   Maybe<SubtitleInfo> ms = resolveById(id);
   if (!ms) return false;
 
   if (!QFile::exists(movie)) return false;
 
-  QString archivePath = ms.value().sourceLocation;
+  QString downloadedPath = ms.value().sourceLocation;
+  if (!QFile::exists(downloadedPath)) return false;
 
-  if (!p7zipDecoder->unpackArchiveFiles(archivePath, tmpPath)) return false;
-
-  QString unpackedTmp =
-      tmpPath + QDir::separator() + QFileInfo(archivePath).completeBaseName();
   subtitlesTmp = tmpPath + QDir::separator() + subFileName;
+  if (QFile::exists(subtitlesTmp)) QFile::remove(subtitlesTmp);
 
-  QFile::copy(unpackedTmp, subtitlesTmp);
-  QFile::remove(unpackedTmp);
+  if (!QFile::copy(downloadedPath, subtitlesTmp)) return false;
+  QFile::remove(downloadedPath);
 
   return true;
 }
@@ -220,7 +265,28 @@ bool OpenSubtitlesDownloadEngine::login() {
   args << engineConfig.nick() << engineConfig.password() << language.toLower()
        << userAgent;
   if (!rpc.request("LogIn", args)) return false;
-  token = (rpc.getResponse().toMap())["token"].toString();
+
+  QVariantMap responseMap = rpc.getResponse().toMap();
+
+  // A token alone does not mean the credentials were accepted: rejected ones
+  // answer "401 Unauthorized" and still hand back a token that works as an
+  // anonymous session.
+  //
+  // Retry without credentials rather than giving up. Searching works anonymously
+  // and downloading does not use the token at all, so refusing to go on would
+  // turn a wrong password into an engine that silently finds nothing - worse
+  // than what it replaces. The account buys nothing here either: the server
+  // reports its download quota as limit_check_by = "user_ip".
+  if (!responseMap["status"].toString().startsWith("200") &&
+      !engineConfig.nick().isEmpty()) {
+    QVariantList anonymousArgs;
+    anonymousArgs << QString() << QString() << language.toLower() << userAgent;
+    if (!rpc.request("LogIn", anonymousArgs)) return false;
+    responseMap = rpc.getResponse().toMap();
+    if (!responseMap["status"].toString().startsWith("200")) return false;
+  }
+
+  token = responseMap["token"].toString();
 
   return !token.isEmpty();
 }
