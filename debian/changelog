@@ -1,3 +1,31 @@
+subnapi (0.5.4-1) unstable; urgency=medium
+
+  * Report a failed search honestly: a server that could not be reached, and
+    Napisy24 refusing the account details, are no longer both presented as
+    "no subtitles found".
+  * Apply a network timeout. A server that accepted a connection and then
+    said nothing held every request open indefinitely, and closing a dialog
+    joins those threads - one silent server locked up the application.
+  * Repeat NapiProjekt's stated reason when it refuses an upload, instead of
+    only that it was refused.
+  * Stop sending the NapiProjekt password with the directory scan's database
+    check, which ignores credentials entirely, and use HTTPS for NapiProjekt
+    and Napisy24 throughout.
+  * Fix encoding handling: replacing diacritics no longer writes UTF-8 into a
+    file of another encoding, removing advertising lines keeps the file's own
+    line endings, and an encoding named in the configuration but no longer
+    supported falls back to the default instead of silently disabling
+    conversion.
+  * Check that 7-Zip actually succeeded rather than only that it finished.
+  * Subtitles fetched through a napiprojekt: link now go through the same
+    post-processing as any other.
+  * Reject a command-line switch whose value is missing or is another switch,
+    rather than uploading that switch as the subtitle author.
+  * Tell a failed database check apart from a confirmed miss in the
+    NapiProjekt directory scan.
+
+ -- mskpluk <mskpluk@users.noreply.github.com>  Sat, 15 Aug 2026 20:00:00 +0000
+
 subnapi (0.5.3-1) unstable; urgency=medium
 
   * OpenSubtitles: fetch subtitle files over HTTP instead of the XML-RPC

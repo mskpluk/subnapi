@@ -36,6 +36,21 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.4" date="2026-08-15">
+      <description>
+        <p>
+          Says what actually went wrong instead of always answering "no
+          subtitles found": an unreachable server and refused account details
+          are now told apart from an empty result, and NapiProjekt's stated
+          reason for refusing an upload is repeated rather than dropped.
+          Applies a network timeout, so a server that goes quiet no longer
+          holds a request open forever and locks up the application when a
+          dialog is closed. Fixes several ways subtitle files were corrupted
+          while being converted, uses HTTPS throughout, and stops sending the
+          NapiProjekt password to a check that ignores it.
+        </p>
+      </description>
+    </release>
     <release version="0.5.3" date="2026-08-15">
       <description>
         <p>
