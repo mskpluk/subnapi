@@ -36,6 +36,16 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.2" date="2026-08-15">
+      <description>
+        <p>
+          Ignores subtitle credit lines that do not name an author when
+          uploading to NapiProjekt — download stamps left by subtitle sites,
+          song credits and "przekład" credits — instead of uploading them as
+          the subtitle author.
+        </p>
+      </description>
+    </release>
     <release version="0.5.1" date="2026-08-12">
       <description>
         <p>
