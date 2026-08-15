@@ -103,9 +103,14 @@ int uploadSubtitlesFor(const Console& c,
     case NapiProjektUploadResult::NetworkError:
       c.printLineError(tr("A network error occurred while uploading."));
       return EC_NETWORK_ERROR;
-    case NapiProjektUploadResult::ServerRejected:
-      c.printLineError(tr("NapiProjekt rejected the upload."));
+    case NapiProjektUploadResult::ServerRejected: {
+      const QString reason = engine.lastServerMessage();
+      c.printLineError(reason.isEmpty()
+                           ? tr("NapiProjekt rejected the upload.")
+                           : tr("NapiProjekt rejected the upload: %1")
+                                 .arg(reason));
       return EC_SERVER_REJECTED;
+    }
   }
 
   return EC_OK;

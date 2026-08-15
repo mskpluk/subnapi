@@ -76,7 +76,8 @@ class NapiProjektBatchUploadThread : public QNapiThread {
   void run();
 
  signals:
-  void itemFinished(int index, NapiProjektUploadResult result);
+  void itemFinished(int index, NapiProjektUploadResult result,
+                    const QString& serverMessage);
   void batchFinished();
 
  private:
@@ -98,7 +99,8 @@ class frmNapiProjektScan : public QDialog {
   void scanFinished();
   void cellClicked(int row, int column);
   void sendSelectedClicked();
-  void itemFinished(int index, NapiProjektUploadResult result);
+  void itemFinished(int index, NapiProjektUploadResult result,
+                    const QString& serverMessage);
   void batchFinished();
 
  private:

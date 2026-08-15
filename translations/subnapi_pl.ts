@@ -234,9 +234,14 @@
         <translation>Podczas wysyłania wystąpił błąd sieci.</translation>
     </message>
     <message>
-        <location filename="../cli/src/clisubtitlesuploader.cpp" line="107"/>
+        <location filename="../cli/src/clisubtitlesuploader.cpp" line="109"/>
         <source>NapiProjekt rejected the upload.</source>
         <translation>NapiProjekt odrzucił przesłane napisy.</translation>
+    </message>
+    <message>
+        <location filename="../cli/src/clisubtitlesuploader.cpp" line="110"/>
+        <source>NapiProjekt rejected the upload: %1</source>
+        <translation>NapiProjekt odrzucił wysyłkę: %1</translation>
     </message>
 </context>
 <context>
@@ -1289,8 +1294,8 @@
     <message>
         <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="180"/>
         <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="292"/>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="368"/>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="372"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="374"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="378"/>
         <source>Subnapi</source>
         <translation>Subnapi</translation>
     </message>
@@ -1360,27 +1365,32 @@
         <translation>Wysyłanie zaznaczonych napisów...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="348"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="349"/>
         <source>Sent</source>
         <translation>Wysłano</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="353"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="358"/>
         <source>Failed to send</source>
         <translation>Nie udało się wysłać</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="363"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="359"/>
+        <source>Failed to send: %1</source>
+        <translation>Nie udało się wysłać: %1</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="369"/>
         <source>Done.</source>
         <translation>Gotowe.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="369"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="375"/>
         <source>Sent %1 subtitle file(s) successfully.</source>
         <translation>Wysłano pomyślnie %1 plik(ów) z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="373"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="379"/>
         <source>Sent %1 of %2 subtitle file(s) successfully; %3 failed.</source>
         <translation>Wysłano pomyślnie %1 z %2 plik(ów) z napisami; %3 nieudanych.</translation>
     </message>
@@ -1389,7 +1399,7 @@
     <name>frmNapiProjektUpload</name>
     <message>
         <location filename="../gui/ui/frmnapiprojektupload.ui" line="14"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="95"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="96"/>
         <source>Subnapi - Upload subtitles to NapiProjekt</source>
         <translation>Subnapi - Wysyłanie napisów do NapiProjekt</translation>
     </message>
@@ -1424,81 +1434,86 @@
         <translation>Komentarz do poprawki:</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="73"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="74"/>
         <source>Choose a video file</source>
         <translation>Wybierz plik wideo</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="82"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="83"/>
         <source>Choose a subtitles file</source>
         <translation>Wybierz plik z napisami</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="94"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="95"/>
         <source>Subnapi - Send a subtitles correction to NapiProjekt</source>
         <translation>Subnapi - Wysyłanie poprawki napisów do NapiProjekt</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="105"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="106"/>
         <source>Select a valid video file.</source>
         <translation>Wybierz prawidłowy plik wideo.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="105"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="109"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="119"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="159"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="166"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="170"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="174"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="178"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="106"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="110"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="120"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="160"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="167"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="171"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="175"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="180"/>
         <source>Subnapi</source>
         <translation>Subnapi</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="110"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="111"/>
         <source>Select a valid subtitles file.</source>
         <translation>Wybierz prawidłowy plik z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="120"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="121"/>
         <source>Configure your NapiProjekt account (nick and password) in Settings before uploading.</source>
         <translation>Skonfiguruj konto NapiProjekt (login i hasło) w Ustawieniach przed wysłaniem napisów.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="137"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="138"/>
         <source>Uploading...</source>
         <translation>Wysyłanie...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="161"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="162"/>
         <source>Correction sent, pending moderation.</source>
         <translation>Poprawka została wysłana, oczekuje na moderację.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="162"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="163"/>
         <source>Subtitles uploaded successfully!</source>
         <translation>Napisy zostały pomyślnie wysłane!</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="167"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="168"/>
         <source>Could not convert the subtitles file.</source>
         <translation>Nie udało się przekonwertować pliku z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="171"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="172"/>
         <source>Could not create the upload archive.</source>
         <translation>Nie udało się utworzyć archiwum do wysyłki.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="175"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="176"/>
         <source>A network error occurred while uploading.</source>
         <translation>Podczas wysyłania wystąpił błąd sieci.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="179"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="182"/>
         <source>NapiProjekt rejected the upload.</source>
         <translation>NapiProjekt odrzucił przesłane napisy.</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="183"/>
+        <source>NapiProjekt rejected the upload: %1</source>
+        <translation>NapiProjekt odrzucił wysyłkę: %1</translation>
     </message>
 </context>
 <context>

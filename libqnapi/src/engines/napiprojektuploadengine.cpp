@@ -87,8 +87,14 @@ QString NapiProjektUploadEngine::npLangWrapper(QString lang) const {
   return SubtitleLanguage(lang).toTwoLetter().toUpper();
 }
 
+QString NapiProjektUploadEngine::lastServerMessage() const {
+  return serverMessage;
+}
+
 NapiProjektUploadResult NapiProjektUploadEngine::upload(
-    const NapiProjektUploadRequest& request) const {
+    const NapiProjektUploadRequest& request) {
+  serverMessage.clear();
+
   if (!QFile::exists(request.videoFilePath) ||
       !QFile::exists(request.subtitleFilePath)) {
     return NapiProjektUploadResult::ConversionFailed;
@@ -184,6 +190,22 @@ NapiProjektUploadResult NapiProjektUploadEngine::upload(
   QString response = QString::fromUtf8(reply->readAll());
   if (response.contains("<status>uploaded</status>")) {
     return NapiProjektUploadResult::Uploaded;
+  }
+
+  // The reason the server gave, so it can be repeated to the user instead of
+  // a bare "rejected". It arrives as <error>...</error>; anything else is
+  // passed on as-is, trimmed of markup, rather than thrown away.
+  static const QRegularExpression errorTag("<error>(.*?)</error>",
+                                           QRegularExpression::DotMatchesEverythingOption);
+  QRegularExpressionMatch match = errorTag.match(response);
+  if (match.hasMatch()) {
+    serverMessage = match.captured(1).trimmed();
+  } else {
+    // Tags become spaces rather than vanishing, so text from neighbouring
+    // elements does not end up run together into one word.
+    serverMessage = response.trimmed()
+                        .replace(QRegularExpression("<[^>]*>"), " ")
+                        .simplified();
   }
 
   return NapiProjektUploadResult::ServerRejected;

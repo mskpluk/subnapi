@@ -112,7 +112,7 @@ void NapiProjektBatchUploadThread::run() {
   for (int i = 0; i < requests.size(); i++) {
     if (abort) return;
     NapiProjektUploadResult result = engine.upload(requests[i]);
-    emit itemFinished(i, result);
+    emit itemFinished(i, result, engine.lastServerMessage());
   }
 
   emit batchFinished();
@@ -337,7 +337,8 @@ void frmNapiProjektScan::sendSelectedClicked() {
   batchUploadThread.start();
 }
 
-void frmNapiProjektScan::itemFinished(int index, NapiProjektUploadResult result) {
+void frmNapiProjektScan::itemFinished(int index, NapiProjektUploadResult result,
+                                      const QString &serverMessage) {
   if (index < 0 || index >= batchUploadRowIndex.size()) return;
   int row = batchUploadRowIndex[index];
 
@@ -349,8 +350,13 @@ void frmNapiProjektScan::itemFinished(int index, NapiProjektUploadResult result)
       batchSuccessCount++;
       break;
     default:
+      // The server's own words when it has them: across a batch, "failed" on
+      // every row says nothing about whether one file was a duplicate or the
+      // whole account was refused.
       statusItem->setIcon(QIcon(":/ui/exclamation.png"));
-      statusItem->setText(tr("Failed to send"));
+      statusItem->setText(serverMessage.isEmpty()
+                              ? tr("Failed to send")
+                              : tr("Failed to send: %1").arg(serverMessage));
       batchFailCount++;
       break;
   }

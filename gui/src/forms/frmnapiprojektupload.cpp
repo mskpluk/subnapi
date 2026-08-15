@@ -34,6 +34,7 @@ void UploadThread::run() {
 
   NapiProjektUploadEngine engine(tmpPath, engineConfig, p7zipDecoder);
   result = engine.upload(request);
+  serverMessage = engine.lastServerMessage();
 
   emit uploadFinished();
 }
@@ -175,8 +176,12 @@ void frmNapiProjektUpload::uploadFinished() {
                             tr("A network error occurred while uploading."));
       return;
     case NapiProjektUploadResult::ServerRejected:
-      QMessageBox::critical(this, tr("Subnapi"),
-                            tr("NapiProjekt rejected the upload."));
+      QMessageBox::critical(
+          this, tr("Subnapi"),
+          uploadThread.serverMessage.isEmpty()
+              ? tr("NapiProjekt rejected the upload.")
+              : tr("NapiProjekt rejected the upload: %1")
+                    .arg(uploadThread.serverMessage));
       return;
   }
 }

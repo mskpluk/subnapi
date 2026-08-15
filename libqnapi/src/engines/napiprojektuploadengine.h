@@ -54,7 +54,13 @@ class NapiProjektUploadEngine {
       const QString& tmpPath, const EngineConfig& config,
       const QSharedPointer<const P7ZipDecoder>& p7zipDecoder);
 
-  NapiProjektUploadResult upload(const NapiProjektUploadRequest& request) const;
+  NapiProjektUploadResult upload(const NapiProjektUploadRequest& request);
+
+  // What the server said when it turned an upload down. NapiProjekt gives a
+  // reason - wrong account, a duplicate, something else - and without it
+  // "rejected" leaves nothing to act on. Empty unless the last upload came
+  // back as ServerRejected.
+  QString lastServerMessage() const;
 
   // Read-only check_subtitles query (mode=2056) - whether NapiProjekt
   // already has any subtitles for this video hash and language. Needs no
@@ -75,6 +81,8 @@ class NapiProjektUploadEngine {
                                 const QString& destFilePath) const;
 
   QString npLangWrapper(QString lang) const;
+
+  QString serverMessage;
 };
 
 #endif  // NAPIPROJEKTUPLOADENGINE_H

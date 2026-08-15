@@ -34,6 +34,7 @@ class UploadThread : public QNapiThread {
   void run();
 
   NapiProjektUploadResult result;
+  QString serverMessage;
 
  signals:
   void uploadFinished();
