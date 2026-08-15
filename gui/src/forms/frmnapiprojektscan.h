@@ -30,7 +30,11 @@ struct NapiProjektScanRow {
   QString videoHash;
   QString author;
   QString format;
-  bool alreadyInDatabase;
+  // Whether NapiProjekt already holds subtitles for this video. Deliberately
+  // not a bool: the check can also fail to reach the server, and that is not
+  // the same answer as "not there". Collapsing the two would offer a file for
+  // upload that may well be a duplicate.
+  NapiProjektCheckResult checkResult;
 };
 
 Q_DECLARE_METATYPE(NapiProjektScanRow)

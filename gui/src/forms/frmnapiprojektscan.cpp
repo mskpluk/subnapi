@@ -85,10 +85,8 @@ void NapiProjektScanThread::run() {
 
             if (abort) return;
 
-            NapiProjektCheckResult checkResult =
+            row.checkResult =
                 uploadEngine.checkSubtitlesExist(row.videoHash, "PL");
-            row.alreadyInDatabase =
-                (checkResult == NapiProjektCheckResult::Available);
 
             emit rowFound(row);
           },
@@ -204,7 +202,10 @@ void frmNapiProjektScan::folderChange(const QString &folder) {
 void frmNapiProjektScan::rowFound(NapiProjektScanRow row) {
   int r = rows.size();
   rows << row;
-  included << !row.alreadyInDatabase;
+  // Only files the server confirmed it does not have are offered by default.
+  // A check that never reached the server says nothing, so those are left out
+  // for the user to decide on rather than queued as if they were new.
+  included << (row.checkResult == NapiProjektCheckResult::NotAvailable);
 
   auto readOnlyItem = [](const QString &text) {
     QTableWidgetItem *item = new QTableWidgetItem(text);
@@ -230,9 +231,14 @@ void frmNapiProjektScan::setRowIncluded(int row, bool isIncluded) {
   if (isIncluded) {
     statusItem->setIcon(QIcon(":/ui/accept.png"));
     statusItem->setText(tr("Ready to send"));
-  } else if (rows[row].alreadyInDatabase) {
+  } else if (rows[row].checkResult == NapiProjektCheckResult::Available) {
     statusItem->setIcon(QIcon(":/ui/exclamation.png"));
     statusItem->setText(tr("Subtitles are already in the database"));
+  } else if (rows[row].checkResult == NapiProjektCheckResult::NetworkError) {
+    statusItem->setIcon(QIcon(":/ui/exclamation.png"));
+    statusItem->setText(
+        tr("Could not check the database - sending may duplicate existing "
+           "subtitles"));
   } else {
     statusItem->setIcon(QIcon(":/ui/exclamation.png"));
     statusItem->setText(tr("Ignored"));
@@ -272,7 +278,8 @@ void frmNapiProjektScan::scanFinished() {
 void frmNapiProjektScan::sendSelectedClicked() {
   bool anyCorrections = false;
   for (int i = 0; i < rows.size(); i++) {
-    if (included[i] && rows[i].alreadyInDatabase) {
+    if (included[i] &&
+        rows[i].checkResult == NapiProjektCheckResult::Available) {
       anyCorrections = true;
       break;
     }
@@ -301,9 +308,14 @@ void frmNapiProjektScan::sendSelectedClicked() {
     req.subtitleFilePath = rows[i].subtitlePath;
     req.language = "PL";
     req.author = ui.twResults->item(i, 1)->text();
-    req.mode = rows[i].alreadyInDatabase ? NapiProjektUploadMode::Correction
-                                         : NapiProjektUploadMode::NewSubtitles;
-    req.comment = rows[i].alreadyInDatabase ? correctionComment : "";
+    // Only a confirmed hit is sent as a correction. A row whose check failed
+    // goes as new subtitles - it is the only thing that can be claimed
+    // truthfully, and the row carries a warning saying so.
+    const bool isCorrection =
+        rows[i].checkResult == NapiProjektCheckResult::Available;
+    req.mode = isCorrection ? NapiProjektUploadMode::Correction
+                            : NapiProjektUploadMode::NewSubtitles;
+    req.comment = isCorrection ? correctionComment : "";
 
     requests << req;
     requestRowIndex << i;
