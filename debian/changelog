@@ -1,3 +1,20 @@
+subnapi (0.5.3-1) unstable; urgency=medium
+
+  * OpenSubtitles: fetch subtitle files over HTTP instead of the XML-RPC
+    download method, which stopped returning subtitles - for accounts
+    without VIP it answers with a placeholder advertising VIP membership,
+    which was saved next to the movie as if it were the subtitles.
+  * OpenSubtitles: match results by release name and fall back to searching
+    by file name when no subtitles carry the movie's hash, honouring the
+    other releases uploaders list in their comment.
+  * Fix encoding auto-detection always answering UTF-8, which decoded
+    windows-1250 subtitles into replacement characters.
+  * NapiProjekt directory scan: tell a failed database check apart from a
+    confirmed miss, instead of offering files for upload that may already
+    be in the database.
+
+ -- mskpluk <mskpluk@users.noreply.github.com>  Sat, 15 Aug 2026 14:00:00 +0000
+
 subnapi (0.5.2-1) unstable; urgency=medium
 
   * Ignore subtitle credit lines that do not name an author when uploading

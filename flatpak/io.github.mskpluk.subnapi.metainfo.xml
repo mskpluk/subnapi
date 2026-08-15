@@ -36,6 +36,19 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.3" date="2026-08-15">
+      <description>
+        <p>
+          Restores subtitle downloads from OpenSubtitles, which had started
+          saving a VIP advertisement instead of the subtitles, and matches
+          results by release name when no subtitles carry the movie's hash.
+          Fixes encoding auto-detection, which reported every file as UTF-8
+          and turned Polish characters in windows-1250 subtitles into
+          replacement characters. The NapiProjekt directory scan no longer
+          presents a failed database check as "not in the database".
+        </p>
+      </description>
+    </release>
     <release version="0.5.2" date="2026-08-15">
       <description>
         <p>
