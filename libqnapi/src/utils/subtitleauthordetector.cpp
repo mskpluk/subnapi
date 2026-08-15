@@ -35,6 +35,30 @@ const int kTailLineCount = 20;
 const char *const kAuthorLabels[] = {
     "tłumaczenie", "tekst polski", "tekst", "napisy", "wersja polska",
 };
+
+// A credit line carrying one of these words is not an authorship line, so
+// whatever follows its colon is never the author. All are matched as stems so
+// every inflection is covered.
+//
+// "pobran" - a download stamp left behind by a subtitle site: "Napisy pobrane
+// z napiprojekt.pl: ...". Covers pobrane, pobrany, pobrana, pobranych.
+//
+// "piosen" - a song credit: "Tekst piosenki: ...", "Teksty piosenek: ...".
+// That names the lyricist, not the person who authored the subtitles. Covers
+// piosenka, piosenki, piosenek, piosenkę.
+//
+// "przekład" - covers przekład, przekładu, przekłady. A bare "Przekład: ..."
+// is already ignored simply by not being an author label; this entry is what
+// additionally rejects the compound forms that do start with a label, such as
+// "Tłumaczenie i przekład: ..." or "Napisy i przekład piosenek: ...".
+const char *const kRejectedWords[] = {"pobran", "piosen", "przekład"};
+
+bool isRejectedCreditLine(const QString &line) {
+  for (const char *const word : kRejectedWords) {
+    if (line.contains(QString::fromUtf8(word), Qt::CaseInsensitive)) return true;
+  }
+  return false;
+}
 }  // namespace
 
 QString detectSubtitleAuthor(const QString &subtitleFilePath) {
@@ -59,7 +83,7 @@ QString detectSubtitleAuthor(const QString &subtitleFilePath) {
   // the middle of a line of dialogue is not mistaken for a credit. The
   // trailing "[^:\n]*" lets qualified variants through - "Tłumaczenie na
   // zlecenie ...:", "Napisy i synchronizacja:" - capturing whatever follows
-  // the colon.
+  // the colon, except for the download stamps rejected above.
   for (const char *const label : kAuthorLabels) {
     QRegularExpression pattern(
         QString("^\\s*%1[^:\\n]*:\\s*(.+)$").arg(QString::fromUtf8(label)),
@@ -69,8 +93,10 @@ QString detectSubtitleAuthor(const QString &subtitleFilePath) {
     QString author;
     QRegularExpressionMatchIterator it = pattern.globalMatch(tail);
     while (it.hasNext()) {
+      QRegularExpressionMatch match = it.next();
+      if (isRejectedCreditLine(match.captured(0))) continue;
       // Within one label the credit is conventionally the last occurrence.
-      author = it.next().captured(1).trimmed();
+      author = match.captured(1).trimmed();
     }
 
     if (!author.isEmpty()) return author;
