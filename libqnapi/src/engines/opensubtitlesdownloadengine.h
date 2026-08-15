@@ -51,6 +51,11 @@ class OpenSubtitlesDownloadEngine : public SubtitleDownloadEngine {
   quint64 fileSize;
   QString subFileName, token;
 
+  // ocenia, na ile dany wynik wyszukiwania pasuje do pliku z filmem
+  SubtitleResolution resolveSubtitleMatch(const QVariantMap& responseMap) const;
+  // wykonuje jedno wyszukiwanie i dopisuje znalezione napisy do listy
+  bool collectSubtitles(const QVariantMap& query, bool onlyMatching);
+
   // sprawdza czy dana instancja klasy jest zalogowana na sewerze
   bool isLogged() { return !token.isEmpty(); }
   // loguje na serwer OpenSubtitles

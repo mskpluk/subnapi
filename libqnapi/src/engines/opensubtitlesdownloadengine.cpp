@@ -54,7 +54,61 @@ const QString openSubtitlesDownloadContentType = "application/force-download";
 // exact size keeps working if the wording changes.
 const QString openSubtitlesVipPlaceholderMarker = "osdb.link/vip";
 const int openSubtitlesPlaceholderMaxSize = 1024;
+
+// Uploaders often note in the free-text comment which other releases their
+// subtitles fit, in one of two shapes seen in the wild:
+//
+//   "Pasują również do wersji: 1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb; 2160p..."
+//   "Napisy pasują do następujących wersji filmu:" followed by one full
+//   release name per line
+//
+// The label itself is not worth parsing - it is Polish prose that every
+// uploader words differently ("Dopasowano do wersji BluRay.", "Synchro do
+// wersji MP4 1CD 632MB", "Formatowano dla wersji 4K,1080p"). Instead the whole
+// comment is split apart and only the pieces shaped like a release name are
+// kept: at least two dots and this many characters. That shape is what
+// separates "1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb" from the prose around it, and
+// it is specific enough that matching it against a file name is not a
+// coincidence - unlike a bare "BluRay", which would fit half a library.
+const int openSubtitlesReleaseNameMinLength = 12;
+const int openSubtitlesReleaseNameMinDots = 2;
 }  // namespace OpenSubtitlesDownloadEngineConst
+
+namespace {
+
+// Release names for the same release are written with dots, spaces or
+// underscores between the parts, so everything that is not a letter or a digit
+// is dropped before comparing. This is what lets the subtitles uploaded as
+// "...1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb" be recognised for a movie file named
+// "... 1080p AMZN WEB-DL DDP5 1 H 264-NTb".
+QString normalizeReleaseName(const QString &name) {
+  QString normalized;
+  normalized.reserve(name.size());
+  for (const QChar &c : name) {
+    if (c.isLetterOrNumber()) normalized += c.toLower();
+  }
+  return normalized;
+}
+
+QStringList releaseNamesInComment(const QString &comment) {
+  QStringList releaseNames;
+  const QStringList parts =
+      comment.split(QRegularExpression("[;,\\s]+"), Qt::SkipEmptyParts);
+
+  for (const QString &part : parts) {
+    if (part.length() < OpenSubtitlesDownloadEngineConst::
+                            openSubtitlesReleaseNameMinLength)
+      continue;
+    if (part.count('.') <
+        OpenSubtitlesDownloadEngineConst::openSubtitlesReleaseNameMinDots)
+      continue;
+    releaseNames << part;
+  }
+
+  return releaseNames;
+}
+
+}  // namespace
 
 SubtitleDownloadEngineMetadata OpenSubtitlesDownloadEngine::metadata =
     SubtitleDownloadEngineMetadata(
@@ -111,18 +165,49 @@ QString OpenSubtitlesDownloadEngine::checksum(QString filename) {
   return (checkSum = QString("%1").arg(hash, 16, 16, QChar('0')));
 }
 
-// szuka napisow
-bool OpenSubtitlesDownloadEngine::lookForSubtitles(QString lang) {
-  if (checkSum.isEmpty()) return false;
-  if (!isLogged() && !login()) return false;
+// Decides how well one search result fits the movie file. Everything here is
+// compared with separators stripped, so the same release written with dots,
+// spaces or underscores compares equal.
+SubtitleResolution OpenSubtitlesDownloadEngine::resolveSubtitleMatch(
+    const QVariantMap &responseMap) const {
+  if (responseMap["SubBad"].toString() != "0") return SUBTITLE_BAD;
 
-  QVariantMap paramsMap;
-  paramsMap["sublanguageid"] = SubtitleLanguage(lang).toTriLetter();
-  paramsMap["moviehash"] = checkSum;
-  paramsMap["moviebytesize"] = QString::number(fileSize);
+  const QString movieName =
+      normalizeReleaseName(QFileInfo(movie).completeBaseName());
 
+  if (movieName ==
+      normalizeReleaseName(
+          QFileInfo(responseMap["SubFileName"].toString()).completeBaseName()))
+    return SUBTITLE_GOOD;
+
+  // Compared for equality rather than containment: MovieReleaseName is
+  // sometimes only a title, and a title appearing somewhere in the file name
+  // says nothing about the release matching.
+  if (movieName ==
+      normalizeReleaseName(responseMap["MovieReleaseName"].toString()))
+    return SUBTITLE_GOOD;
+
+  // The releases the uploader listed as also fitting. These are usually
+  // suffixes of a full name ("1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb" with no title
+  // in front), so containment is the right test here.
+  const QStringList alsoFits =
+      releaseNamesInComment(responseMap["SubAuthorComment"].toString());
+  for (const QString &releaseName : alsoFits) {
+    const QString normalized = normalizeReleaseName(releaseName);
+    if (!normalized.isEmpty() && movieName.contains(normalized))
+      return SUBTITLE_GOOD;
+  }
+
+  return SUBTITLE_UNKNOWN;
+}
+
+// Runs one search and appends what it found. With onlyMatching set, results
+// that cannot be tied to this particular release are dropped instead of being
+// listed as SUBTITLE_UNKNOWN - see the call site for why.
+bool OpenSubtitlesDownloadEngine::collectSubtitles(const QVariantMap &query,
+                                                   bool onlyMatching) {
   QVariantList requestList;
-  requestList << paramsMap;
+  requestList << query;
 
   QVariantList args;
   args << token << (QVariant)requestList;
@@ -133,6 +218,8 @@ bool OpenSubtitlesDownloadEngine::lookForSubtitles(QString lang) {
 
   if (!responseMap.contains("data")) return false;
 
+  const bool searchedByHash = query.contains("moviehash");
+
   QVariantList dataList = responseMap["data"].toList();
   QVariantList::iterator i;
 
@@ -140,26 +227,16 @@ bool OpenSubtitlesDownloadEngine::lookForSubtitles(QString lang) {
   while (i != dataList.end()) {
     responseMap = (*(i++)).toMap();
 
-    if ((checkSum != responseMap["MovieHash"]) &&
+    // Kept from when this was the only search: guards against the server
+    // answering a hash query with something it did not match on. A search by
+    // name reports no hash at all, so the check applies only to hash queries.
+    if (searchedByHash && (checkSum != responseMap["MovieHash"]) &&
         (fileSize != responseMap["MovieByteSize"]))
       continue;
 
-    SubtitleResolution r = SUBTITLE_UNKNOWN;
+    SubtitleResolution r = resolveSubtitleMatch(responseMap);
 
-    if (responseMap["SubBad"].toString() != "0") {
-      r = SUBTITLE_BAD;
-    } else if (QFileInfo(movie).completeBaseName() ==
-               QFileInfo(responseMap["SubFileName"].toString())
-                   .completeBaseName()) {
-      r = SUBTITLE_GOOD;
-    } else if (QRegularExpression(
-                   QString("^%1$").arg(
-                       responseMap["MovieReleaseName"].toString()),
-                   QRegularExpression::CaseInsensitiveOption)
-                   .match(QFileInfo(movie).completeBaseName())
-                   .hasMatch()) {
-      r = SUBTITLE_GOOD;
-    }
+    if (onlyMatching && r != SUBTITLE_GOOD) continue;
 
     QString subtitleName = responseMap["MovieReleaseName"].toString();
     if (subtitleName.isEmpty())
@@ -170,6 +247,47 @@ bool OpenSubtitlesDownloadEngine::lookForSubtitles(QString lang) {
         responseMap["IDSubtitleFile"].toString(), subtitleName.trimmed(),
         responseMap["SubAuthorComment"].toString(),
         QFileInfo(responseMap["SubFileName"].toString()).suffix(), r);
+  }
+
+  return true;
+}
+
+// szuka napisow
+bool OpenSubtitlesDownloadEngine::lookForSubtitles(QString lang) {
+  if (checkSum.isEmpty()) return false;
+  if (!isLogged() && !login()) return false;
+
+  const QString languageId = SubtitleLanguage(lang).toTriLetter();
+
+  QVariantMap byHash;
+  byHash["sublanguageid"] = languageId;
+  byHash["moviehash"] = checkSum;
+  byHash["moviebytesize"] = QString::number(fileSize);
+
+  // What the hash search adds has to be counted rather than the whole list
+  // checked for emptiness: results accumulate across calls, and this is called
+  // once per language. Searching a backup language after the primary one found
+  // something would otherwise never reach the fallback below.
+  const int foundBeforeHashSearch = subtitlesList.size();
+
+  collectSubtitles(byHash, false);
+
+  // A hash match means the subtitles were uploaded for this exact file, which
+  // is the best evidence there is - but only files somebody already tied to
+  // this release have one, so a miss is common. Fall back to searching by name.
+  //
+  // Only results that can be tied to this release are kept from that search,
+  // because the caller may act on the list without asking: a single result is
+  // downloaded without showing a list at all (QNapi::needToShowList), and
+  // "never show list" takes the first one. A search by name otherwise happily
+  // returns subtitles for a different release of the same title, and those
+  // would be saved next to the movie unannounced.
+  if (subtitlesList.size() == foundBeforeHashSearch) {
+    QVariantMap byName;
+    byName["sublanguageid"] = languageId;
+    byName["query"] = QFileInfo(movie).completeBaseName();
+
+    collectSubtitles(byName, true);
   }
 
   return (subtitlesList.size() > 0);
