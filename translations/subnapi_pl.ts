@@ -171,13 +171,8 @@
         <source>No permission to write to the directory &apos;%1&apos;!</source>
         <translation>Brak uprawnień zapisu do katalogu &apos;%1&apos;!</translation>
     </message>
-    <message>
-        <location filename="../cli/src/clisubtitlesdownloader.cpp" line="196"/>
-        <source>Subtitles not found!</source>
-        <translation>Nie znaleziono napisow!</translation>
-    </message>
     <message numerus="yes">
-        <location filename="../cli/src/clisubtitlesdownloader.cpp" line="228"/>
+        <location filename="../cli/src/clisubtitlesdownloader.cpp" line="230"/>
         <source>Processing of remaining %n file(s) was ignored due to critical error.</source>
         <translation>
             <numerusform>Pobieranie pozostalego 1 pliku przerwane z powodu bledu.</numerusform>
@@ -397,42 +392,42 @@
 <context>
     <name>GuiMain</name>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="143"/>
+        <location filename="../gui/src/guimain.cpp" line="158"/>
         <source>List of languages recognized by Subnapi, including corresponding</source>
         <translation>Lista języków rozpoznawanych przez Subnapi, wraz z odpowiadającymi im</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="145"/>
+        <location filename="../gui/src/guimain.cpp" line="160"/>
         <source>two-letter language codes:</source>
         <translation>im dwuliterowych kodow:</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="160"/>
+        <location filename="../gui/src/guimain.cpp" line="175"/>
         <source>Current default subtitles language: %1 (%2)</source>
         <translation>Aktualnie ustawiony preferowany jezyk pobierania napisow: %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="165"/>
+        <location filename="../gui/src/guimain.cpp" line="180"/>
         <source>No alternative subtitles language has been set</source>
         <translation>Brak ustawionego zapasowego jezyka napisow</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="167"/>
+        <location filename="../gui/src/guimain.cpp" line="182"/>
         <source>Current alternative subtitles language: %1 (%2)</source>
         <translation>Aktualnie ustawiony zapasowy jezyk napisow: %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="176"/>
+        <location filename="../gui/src/guimain.cpp" line="191"/>
         <source>Subnapi - command line argument parsing error</source>
         <translation>Subnapi - błąd analizy argumentów wiersza poleceń</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="210"/>
+        <location filename="../gui/src/guimain.cpp" line="225"/>
         <source>Subnapi - CLI executable not found</source>
         <translation>Subnapi - nie znaleziono pliku wykonywalnego CLI</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="211"/>
+        <location filename="../gui/src/guimain.cpp" line="226"/>
         <source>You have requested to run Subnapi in command-line mode, but unfortunately command-line binary &apos;%1&apos; could not be found.</source>
         <translation>Zażądano uruchomienia Subnapi w trybie wiersza poleceń, ale nie znaleziono pliku wykonywalnego &apos;%1&apos;.</translation>
     </message>
@@ -581,7 +576,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../libqnapi/src/engines/napiprojektdownloadengine.cpp" line="47"/>
+        <location filename="../libqnapi/src/engines/napiprojektdownloadengine.cpp" line="50"/>
         <source>&lt;b&gt;www.napiprojekt.pl&lt;/b&gt; subtitles download engine</source>
         <translation>Silnik pobierania napisów z serwisu &lt;b&gt;www.napiprojekt.pl&lt;/b&gt;</translation>
     </message>
@@ -591,7 +586,7 @@
         <translation>Silnik pobierania napisów z serwisu &lt;b&gt;www.napisy24.pl&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/engines/opensubtitlesdownloadengine.cpp" line="28"/>
+        <location filename="../libqnapi/src/engines/opensubtitlesdownloadengine.cpp" line="127"/>
         <source>&lt;b&gt;www.opensubtitles.org&lt;/b&gt; subtitles download engine</source>
         <translation>Silnik pobierania napisów z serwisu &lt;b&gt;www.opensubtitles.org&lt;/b&gt;</translation>
     </message>
@@ -616,37 +611,42 @@
         <translation>Pliki z napisami (*.srt *.txt *.sub);;Wszystkie pliki (*.*)</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="97"/>
+        <location filename="../gui/src/guimain.cpp" line="112"/>
         <source>Subnapi</source>
         <translation>Subnapi</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="103"/>
+        <location filename="../gui/src/guimain.cpp" line="118"/>
         <source>Subnapi - Error</source>
         <translation>Subnapi - Błąd</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="248"/>
+        <location filename="../gui/src/guimain.cpp" line="263"/>
         <source>Subnapi: deleting temporary files...</source>
         <translation>Subnapi: usuwanie plików tymczasowych...</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="263"/>
+        <location filename="../gui/src/guimain.cpp" line="278"/>
         <source>Subnapi: finished.</source>
         <translation>Subnapi: zakończono.</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="98"/>
+        <location filename="../gui/src/guimain.cpp" line="113"/>
         <source>Subtitles downloaded successfully!</source>
         <translation>Napisy zostały pomyślnie pobrane!</translation>
     </message>
     <message>
-        <location filename="../gui/src/guimain.cpp" line="104"/>
+        <location filename="../gui/src/guimain.cpp" line="119"/>
         <source>Failed to download subtitles</source>
         <translation>Nie udało się pobrać napisów</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/qnapi.cpp" line="90"/>
+        <location filename="../libqnapi/src/qnapi.cpp" line="100"/>
+        <source>Could not reach the subtitles server - it is unknown whether subtitles exist. Try again in a moment.</source>
+        <translation>Nie udało się połączyć z serwerem napisów - nie wiadomo, czy napisy istnieją. Spróbuj za chwilę.</translation>
+    </message>
+    <message>
+        <location filename="../libqnapi/src/qnapi.cpp" line="103"/>
         <source>No subtitles found!</source>
         <translation>Nie znaleziono napisów!</translation>
     </message>
@@ -1277,100 +1277,105 @@
         <translation>Wyślij zaznaczone</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="173"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="171"/>
         <source>Select the folder to scan</source>
         <translation>Wybierz katalog do skanowania</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="182"/>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="285"/>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="356"/>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="360"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="180"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="292"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="368"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="372"/>
         <source>Subnapi</source>
         <translation>Subnapi</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="182"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="180"/>
         <source>Select a valid directory.</source>
         <translation>Wybierz prawidłowy katalog.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="193"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="191"/>
         <source>Scanning...</source>
         <translation>Skanowanie...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="201"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="199"/>
         <source>Scanning directory &lt;b&gt;%1&lt;/b&gt;...</source>
         <translation>Skanowanie katalogu &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="220"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="221"/>
         <source>Polish</source>
         <translation>polski</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="232"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="233"/>
         <source>Ready to send</source>
         <translation>Gotowe do wysłania</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="235"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="236"/>
         <source>Subtitles are already in the database</source>
         <translation>Napisy znajdują się już w bazie</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="238"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="240"/>
+        <source>Could not check the database - sending may duplicate existing subtitles</source>
+        <translation>Nie udało się sprawdzić bazy - wysłanie może zduplikować istniejące napisy</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="244"/>
         <source>Ignored</source>
         <translation>Pominięte</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="267"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="273"/>
         <source>No local subtitle files found.</source>
         <translation>Nie znaleziono lokalnych plików z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="268"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="274"/>
         <source>Found %1 subtitle file(s).</source>
         <translation>Znaleziono %1 plik(ów) z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="286"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="293"/>
         <source>These subtitles are already in NapiProjekt&apos;s database - this will be sent as a correction. Briefly describe what you fixed:</source>
         <translation>Te napisy znajdują się już w bazie NapiProjekt - zostaną wysłane jako poprawka. Krótko opisz, co zostało poprawione:</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="310"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="322"/>
         <source>Sending...</source>
         <translation>Wysyłanie...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="321"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="333"/>
         <source>Sending selected subtitles...</source>
         <translation>Wysyłanie zaznaczonych napisów...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="336"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="348"/>
         <source>Sent</source>
         <translation>Wysłano</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="341"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="353"/>
         <source>Failed to send</source>
         <translation>Nie udało się wysłać</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="351"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="363"/>
         <source>Done.</source>
         <translation>Gotowe.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="357"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="369"/>
         <source>Sent %1 subtitle file(s) successfully.</source>
         <translation>Wysłano pomyślnie %1 plik(ów) z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="361"/>
+        <location filename="../gui/src/forms/frmnapiprojektscan.cpp" line="373"/>
         <source>Sent %1 of %2 subtitle file(s) successfully; %3 failed.</source>
         <translation>Wysłano pomyślnie %1 z %2 plik(ów) z napisami; %3 nieudanych.</translation>
     </message>
@@ -1631,7 +1636,7 @@
     </message>
     <message>
         <location filename="../gui/ui/frmoptions.ui" line="240"/>
-        <location filename="../gui/src/forms/frmoptions.cpp" line="356"/>
+        <location filename="../gui/src/forms/frmoptions.cpp" line="369"/>
         <source>Auto-detected based on system language (%1)</source>
         <translation>Wykryty automatycznie z ustawień systemu (%1)</translation>
     </message>
@@ -2072,24 +2077,24 @@
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmsummary.cpp" line="75"/>
+        <location filename="../gui/src/forms/frmsummary.cpp" line="77"/>
         <source>Subtitles downloaded for %1 %2</source>
         <translation>Pobrano napisy dla %1 %2</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmsummary.cpp" line="77"/>
-        <location filename="../gui/src/forms/frmsummary.cpp" line="80"/>
+        <location filename="../gui/src/forms/frmsummary.cpp" line="79"/>
+        <location filename="../gui/src/forms/frmsummary.cpp" line="82"/>
         <source>files</source>
         <translation>plików</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmsummary.cpp" line="77"/>
-        <location filename="../gui/src/forms/frmsummary.cpp" line="80"/>
+        <location filename="../gui/src/forms/frmsummary.cpp" line="79"/>
+        <location filename="../gui/src/forms/frmsummary.cpp" line="82"/>
         <source>file</source>
         <translation>pliku</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmsummary.cpp" line="78"/>
+        <location filename="../gui/src/forms/frmsummary.cpp" line="80"/>
         <source>Could not download subtitles for %1 %2</source>
         <translation>Nie pobrano napisów dla %1 %2</translation>
     </message>

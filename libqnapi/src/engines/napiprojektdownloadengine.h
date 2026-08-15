@@ -51,8 +51,8 @@ class NapiProjektDownloadEngine : public SubtitleDownloadEngine {
   QSharedPointer<const P7ZipDecoder> p7zipDecoder;
 
   QString checksum(QString filename, bool limit10M);
-  Maybe<QString> downloadByLangAndChecksum(QString lang,
-                                           QString checksum) const;
+  // Not const: records on the engine whether the request got through at all.
+  Maybe<QString> downloadByLangAndChecksum(QString lang, QString checksum);
   QString npFDigest(const QString& input) const;
   QString npLangWrapper(QString lang) const;
   QString napiOS() const;

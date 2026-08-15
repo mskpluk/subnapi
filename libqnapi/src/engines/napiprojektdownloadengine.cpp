@@ -32,11 +32,14 @@ namespace NapiProjektDownloadEngineConsts {
 const unsigned long NAPI_10MB = 10485760;
 
 const QString napiZipPassword = "iBlm8NTigvru0Jr0";
+// HTTPS throughout. This one matters most: the account password travels in
+// the query string, which is the part of a request that ends up written down
+// verbatim by anything sitting between here and the server.
 const QString napiDownloadUrlTpl =
-    "http://www.napiprojekt.pl/unit_napisy/dl.php"
+    "https://www.napiprojekt.pl/unit_napisy/dl.php"
     "?l=%1&f=%2&t=%3&v=other&kolejka=false&nick=%4&pass=%5&napios=%6";
 const QString napiCheckUserUrlTpl =
-    "http://www.napiprojekt.pl/users_check.php?nick=%1&pswd=%2";
+    "https://www.napiprojekt.pl/users_check.php?nick=%1&pswd=%2";
 }  // namespace NapiProjektDownloadEngineConsts
 
 using namespace NapiProjektDownloadEngineConsts;
@@ -45,7 +48,7 @@ SubtitleDownloadEngineMetadata NapiProjektDownloadEngine::metadata =
     SubtitleDownloadEngineMetadata(
         "NapiProjekt",
         QObject::tr("<b>www.napiprojekt.pl</b> subtitles download engine"),
-        just(QUrl("http://www.napiprojekt.pl/rejestracja")), nothing());
+        just(QUrl("https://www.napiprojekt.pl/rejestracja")), nothing());
 
 NapiProjektDownloadEngine::NapiProjektDownloadEngine(
     const QString &tmpPath, const EngineConfig &config,
@@ -70,6 +73,8 @@ QString NapiProjektDownloadEngine::checksum(QString filename) {
 }
 
 bool NapiProjektDownloadEngine::lookForSubtitles(QString lang) {
+  searchNetworkError = false;
+
   Maybe<QString> tmpPackedFileOpt = downloadByLangAndChecksum(lang, checkSum);
 
   if (!tmpPackedFileOpt) {
@@ -95,7 +100,7 @@ bool NapiProjektDownloadEngine::download(QUuid id) {
 }
 
 Maybe<QString> NapiProjektDownloadEngine::downloadByLangAndChecksum(
-    QString lang, QString checksum) const {
+    QString lang, QString checksum) {
   if (checksum.isEmpty()) return nothing();
 
   QString urlTxt = napiDownloadUrlTpl.arg(npLangWrapper(lang))
@@ -110,10 +115,18 @@ Maybe<QString> NapiProjektDownloadEngine::downloadByLangAndChecksum(
   SyncHTTP http;
   QNetworkReply *reply = http.syncGet(QNetworkRequest(url));
 
-  if (reply->error() != QNetworkReply::NoError) return nothing();
+  // The server refusing to answer is not the same as it having no subtitles.
+  // It refuses readily - asking for several files in quick succession is
+  // enough to be turned away for a while - and reporting that as "not found"
+  // told people their subtitles do not exist when they do.
+  if (reply->error() != QNetworkReply::NoError) {
+    searchNetworkError = true;
+    return nothing();
+  }
 
   QByteArray buffer = reply->readAll();
 
+  // "NPc" is how this endpoint says it has nothing, which is a real answer.
   if (buffer.indexOf("NPc") == 0) return nothing();
 
   QString tmpPackedFile = generateTmpPath();
@@ -236,7 +249,7 @@ QString NapiProjektDownloadEngine::normalizeHash(const QString& hash) const {
 QString NapiProjektDownloadEngine::downloadXmlForHash(const QString& hash, const QString& lang) const {
   QString normalizedHash = normalizeHash(hash);
 
-  QString url = "http://napiprojekt.pl/api/api-napiprojekt3.php";
+  QString url = "https://napiprojekt.pl/api/api-napiprojekt3.php";
   
   QByteArray postData;
   postData.append("mode=17&");

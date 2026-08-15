@@ -36,6 +36,12 @@ class EncodingUtils {
   Maybe<QByteArray> encode(const QString& encodingName,
                            const QString& text) const;
 
+  // Whether decode()/encode() know this encoding name. Qt5 accepted every name
+  // its codec registry carried, so a configuration written by an older version
+  // can name one that is gone - and a conversion asked for in a name nothing
+  // recognises does not happen at all.
+  static bool isSupportedEncoding(const QString& encodingName);
+
  private:
   QString diacritics;
   QStringList replacements;

@@ -134,21 +134,43 @@ const char16_t* highTableFor(LegacyCodecs::Encoding encoding) {
   return kWindows1250HighTable;
 }
 
-// Reverse (Unicode -> byte) lookup, built once per encoding from the
-// forward table above.
-const QHash<char16_t, uchar>& reverseTableFor(LegacyCodecs::Encoding encoding) {
-  static QHash<LegacyCodecs::Encoding, QHash<char16_t, uchar>> cache;
+// Reverse (Unicode -> byte) lookup, derived from the forward tables above.
+//
+// Every table is built in one go the first time any of them is needed, rather
+// than one entry at a time on demand. Filling the map lazily meant writing to
+// a shared static from whichever thread got there first, and these run on
+// worker threads - the post-processor on the download thread, the converter on
+// the batch upload thread. Initialisation of a function-local static is
+// thread-safe; mutating it afterwards is not.
+const QHash<LegacyCodecs::Encoding, QHash<char16_t, uchar>>& reverseTables() {
+  static const QHash<LegacyCodecs::Encoding, QHash<char16_t, uchar>> tables =
+      [] {
+        const LegacyCodecs::Encoding allEncodings[] = {
+            LegacyCodecs::Encoding::Windows1250,
+            LegacyCodecs::Encoding::Windows1257,
+            LegacyCodecs::Encoding::Iso8859_2,
+            LegacyCodecs::Encoding::Iso8859_13,
+            LegacyCodecs::Encoding::Iso8859_16,
+        };
 
-  auto it = cache.constFind(encoding);
-  if (it != cache.constEnd()) return it.value();
+        QHash<LegacyCodecs::Encoding, QHash<char16_t, uchar>> built;
+        for (LegacyCodecs::Encoding encoding : allEncodings) {
+          QHash<char16_t, uchar> reverse;
+          const char16_t* highTable = highTableFor(encoding);
+          for (int i = 0; i < 128; i++) {
+            // Bytes with no character assigned to them share U+FFFD in the
+            // forward table. Mapping that back would hand out one arbitrary
+            // undefined byte for every replacement character; leaving it out
+            // lets fromUnicode() substitute '?' instead.
+            if (highTable[i] == 0xFFFD) continue;
+            reverse.insert(highTable[i], static_cast<uchar>(0x80 + i));
+          }
+          built.insert(encoding, reverse);
+        }
+        return built;
+      }();
 
-  QHash<char16_t, uchar> reverse;
-  const char16_t* highTable = highTableFor(encoding);
-  for (int i = 0; i < 128; i++) {
-    reverse.insert(highTable[i], static_cast<uchar>(0x80 + i));
-  }
-
-  return cache.insert(encoding, reverse).value();
+  return tables;
 }
 
 }  // namespace
@@ -184,7 +206,10 @@ QString LegacyCodecs::toUnicode(Encoding encoding, const QByteArray& bytes) {
 }
 
 QByteArray LegacyCodecs::fromUnicode(Encoding encoding, const QString& text) {
-  const QHash<char16_t, uchar>& reverse = reverseTableFor(encoding);
+  static const QHash<char16_t, uchar> empty;
+  auto tableIt = reverseTables().constFind(encoding);
+  const QHash<char16_t, uchar>& reverse =
+      tableIt != reverseTables().constEnd() ? tableIt.value() : empty;
 
   QByteArray result;
   result.reserve(text.size());

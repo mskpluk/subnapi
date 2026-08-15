@@ -20,6 +20,7 @@
 #include <QProcess>
 #include <QRegularExpression>
 #include "subtitlelanguage.h"
+#include "utils/encodingutils.h"
 
 ConfigReader::ConfigReader(
     const QString& appExecutableDir,
@@ -140,15 +141,30 @@ const EngineConfig ConfigReader::readEngineConfig(
                       settings.value(engineName + "/password", "").toString());
 }
 
+namespace {
+// Falls back to the default when the stored name is one nothing can convert.
+// Qt5 offered every codec it knew, so a configuration carried over from QNapi
+// can ask for something like ISO-8859-1 or CP852 - and an encoding conversion
+// requested in an unknown name simply did not run, with nothing said about it.
+QString supportedEncodingOr(const QString& encodingName,
+                            const QString& fallback) {
+  return EncodingUtils::isSupportedEncoding(encodingName) ? encodingName
+                                                          : fallback;
+}
+}  // namespace
+
 const PostProcessingConfig ConfigReader::readPostProcessingConfig(
     const QSettings& settings) const {
   return PostProcessingConfig(
       settings.value("qnapi/post_processing", true).toBool(),
       static_cast<EncodingChangeMethod>(
           settings.value("qnapi/encoding_method", ECM_CHANGE).toInt()),
-      settings.value("qnapi/enc_from", "windows-1250").toString(),
+      supportedEncodingOr(
+          settings.value("qnapi/enc_from", "windows-1250").toString(),
+          "windows-1250"),
       settings.value("qnapi/auto_detect_encoding", true).toBool(),
-      settings.value("qnapi/enc_to", "UTF-8").toString(),
+      supportedEncodingOr(settings.value("qnapi/enc_to", "UTF-8").toString(),
+                          "UTF-8"),
       settings.value("qnapi/sub_format", "srt").toString(),
       settings.value("qnapi/sub_ext", "").toString(),
       settings.value("qnapi/skip_convert_ads", false).toBool(),

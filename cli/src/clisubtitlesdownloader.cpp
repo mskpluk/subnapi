@@ -193,7 +193,9 @@ int downloadForMovie(const Console& c, const QString& movieFilePath, int i,
   bool found = findSubtitles(c, config, napi);
 
   if (!found) {
-    c.printLineWarning(tr("Subtitles not found!"));
+    // Reported by QNapi rather than stated here, so that "the server could not
+    // be reached" does not come out as "there are no subtitles".
+    c.printLineWarning(napi.error());
     return EC_SUBTITLES_NOT_FOUND;
   }
 

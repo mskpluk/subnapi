@@ -71,11 +71,22 @@ bool P7ZipDecoder::runP7Zip(const QStringList& args,
   }
   p7zip.start(p7zipPath, args);
 
-  bool result = p7zip.waitForFinished(operationTimeoutMsecs);
+  // waitForFinished() only reports that the process ended - it says nothing
+  // about whether the operation worked. Without looking at the exit code, a
+  // wrong archive password or a corrupt archive was reported as success, and
+  // callers only noticed because they went on to check whether the file they
+  // wanted had appeared.
+  //
+  // 7-Zip signals a fatal error with 2 or above; 1 means it finished with
+  // non-fatal warnings (an unreadable file among several, say), which is not a
+  // reason to discard an archive that was produced.
+  bool finished = p7zip.waitForFinished(operationTimeoutMsecs);
+  bool succeeded = finished && p7zip.exitStatus() == QProcess::NormalExit &&
+                   p7zip.exitCode() <= 1;
 
   p7zip.close();
 
-  return result;
+  return succeeded;
 }
 
 QString P7ZipDecoder::readP7ZipOutput(const QStringList& args) const {

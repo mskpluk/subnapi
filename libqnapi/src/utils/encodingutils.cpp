@@ -180,6 +180,12 @@ QString EncodingUtils::detectBufferEncoding(const QByteArray &buffer) const {
   return from;
 }
 
+bool EncodingUtils::isSupportedEncoding(const QString &encodingName) {
+  if (encodingName.startsWith("UTF-16", Qt::CaseInsensitive)) return true;
+  if (encodingName.compare("UTF-8", Qt::CaseInsensitive) == 0) return true;
+  return (bool)LegacyCodecs::encodingForName(encodingName);
+}
+
 Maybe<QString> EncodingUtils::decode(const QString &encodingName,
                                      const QByteArray &bytes) const {
   if (encodingName.startsWith("UTF-16", Qt::CaseInsensitive))

@@ -22,6 +22,7 @@
 #include "engines/subtitledownloadenginesregistry.h"
 #include "subconvert/subtitleformatsregistry.h"
 
+#include <QComboBox>
 #include <QScreen>
 #include <QDir>
 #include <QFileDialog>
@@ -66,6 +67,8 @@ class frmOptions : public QDialog {
   QSharedPointer<const SubtitleDownloadEnginesRegistry> enginesRegistry;
 
   void populateEncodings();
+  static void selectEncoding(QComboBox* comboBox, const QString& encoding,
+                             const QString& fallback);
 };
 
 #endif

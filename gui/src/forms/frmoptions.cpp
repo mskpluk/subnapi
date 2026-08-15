@@ -264,6 +264,19 @@ void frmOptions::autoDetectEncodingClicked() {
   ui.lbConvertFrom->setEnabled(checkedCE && !checkedADE);
 }
 
+// findText() answers -1 for a name the list does not carry, and setting that
+// as the current index leaves the box blank - after which currentText() is an
+// empty string, so simply opening this window and pressing OK wiped a setting
+// carried over from a Qt5 configuration naming a codec that is no longer
+// offered. Falling back to the default keeps something valid selected.
+void frmOptions::selectEncoding(QComboBox* comboBox, const QString& encoding,
+                                const QString& fallback) {
+  int idx = comboBox->findText(encoding);
+  if (idx < 0) idx = comboBox->findText(fallback);
+  if (idx < 0) idx = 0;
+  comboBox->setCurrentIndex(idx);
+}
+
 void frmOptions::populateEncodings() {
   ui.cbEncFrom->clear();
   ui.cbEncTo->clear();
@@ -402,10 +415,10 @@ void frmOptions::readConfig(const QNapiConfig &config) {
       config.postProcessingConfig().encodingChangeMethod());
   ui.cbAutoDetectEncoding->setChecked(
       config.postProcessingConfig().encodingAutoDetectFrom());
-  ui.cbEncFrom->setCurrentIndex(
-      ui.cbEncFrom->findText(config.postProcessingConfig().encodingFrom()));
-  ui.cbEncTo->setCurrentIndex(
-      ui.cbEncTo->findText(config.postProcessingConfig().encodingTo()));
+  selectEncoding(ui.cbEncFrom, config.postProcessingConfig().encodingFrom(),
+                 "windows-1250");
+  selectEncoding(ui.cbEncTo, config.postProcessingConfig().encodingTo(),
+                 "UTF-8");
   ui.cbRemoveLines->setChecked(
       config.postProcessingConfig().removeLines());
   ui.teRemoveLinesWords->setText(

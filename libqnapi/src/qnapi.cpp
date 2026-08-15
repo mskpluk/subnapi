@@ -87,7 +87,20 @@ bool QNapi::lookForSubtitles(QString lang, QString engine) {
   }
 
   if (!result) {
-    errorMsg = QObject::tr("No subtitles found!");
+    bool networkError = false;
+    foreach (QSharedPointer<SubtitleDownloadEngine> e, enginesList) {
+      if ((engine.isEmpty() || e->meta().name() == engine) &&
+          e->lastSearchFailedWithNetworkError()) {
+        networkError = true;
+        break;
+      }
+    }
+
+    errorMsg = networkError
+                   ? QObject::tr("Could not reach the subtitles server - it is "
+                                 "unknown whether subtitles exist. Try again "
+                                 "in a moment.")
+                   : QObject::tr("No subtitles found!");
   }
 
   return result;

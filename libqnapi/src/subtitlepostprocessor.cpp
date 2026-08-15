@@ -69,13 +69,21 @@ bool SubtitlePostProcessor::ppReplaceDiacriticsWithASCII(
   Maybe<QString> contentStr = encodingUtils.decode(from, fileContent);
   if (!contentStr) return false;
 
-  fileContent.clear();
-  fileContent.append(
-      encodingUtils.replaceDiacriticsWithASCII(contentStr.value()).toUtf8());
+  const QString replaced =
+      encodingUtils.replaceDiacriticsWithASCII(contentStr.value());
 
-  if (!f.open(QIODevice::WriteOnly)) return false;
+  // Written back in the encoding it was read in, not as UTF-8. The replacement
+  // table covers letters only, so anything else non-ASCII survives it - the
+  // typographic quotes and dashes that fill Polish subtitles among them - and
+  // writing those as UTF-8 left the rest of the file in its original encoding
+  // with a few UTF-8 sequences buried in it. A player reading the file whole
+  // shows those as mojibake.
+  Maybe<QByteArray> encoded = encodingUtils.encode(from, replaced);
+  if (!encoded) return false;
 
-  f.write(fileContent);
+  if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+
+  f.write(encoded.value());
   f.close();
 
   return true;
@@ -133,9 +141,18 @@ bool SubtitlePostProcessor::ppRemoveLinesContainingWords(
   if (!contentOpt) return false;
   QString content = contentOpt.value();
 
+  // Whatever this file uses to end its lines is what it gets written back
+  // with, and a file that did not end in a line break still will not. Removing
+  // a few advertising lines should not also rewrite every line ending in the
+  // file - SRT is conventionally CRLF and some players are particular about it.
+  const QString lineEnding = content.contains("\r\n") ? "\r\n"
+                             : content.contains('\r') ? "\r"
+                                                      : "\n";
+  const bool endedWithLineBreak =
+      content.endsWith('\n') || content.endsWith('\r');
+
   QStringList lines = content.split(QRegularExpression("\r\n|\n|\r"));
-  if (!lines.isEmpty() && lines.last().isEmpty() &&
-      (content.endsWith('\n') || content.endsWith('\r'))) {
+  if (!lines.isEmpty() && lines.last().isEmpty() && endedWithLineBreak) {
     lines.removeLast();
   }
 
@@ -155,10 +172,9 @@ bool SubtitlePostProcessor::ppRemoveLinesContainingWords(
   }
 
   // Write back with same encoding
-  QString outContent;
-  foreach (QString line, filtered) {
-    outContent += line + "\n";
-  }
+  QString outContent = filtered.join(lineEnding);
+  if (endedWithLineBreak && !outContent.isEmpty()) outContent += lineEnding;
+
   Maybe<QByteArray> encoded = encodingUtils.encode(fromCodec, outContent);
   if (!encoded) return false;
 

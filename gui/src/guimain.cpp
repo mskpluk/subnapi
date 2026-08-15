@@ -93,6 +93,21 @@ int processCommand(QNapiApp &app, QVariant cliCommand,
       NapiProjektDownloadEngine engine(tmpPath, engineConfig, p7zipDecoder);
       
       if (engine.downloadFromHashXml(hash, language, saveFilePath)) {
+        // Subtitles arriving through a link get the same treatment as any
+        // other: the encoding, the format and the removed advertising lines
+        // the user asked for in Settings. This step used to be missing here,
+        // so the same file came out differently depending on which way it was
+        // fetched, with no way to tell why.
+        //
+        // The movie file is not known from a link - only its hash - so a
+        // conversion between a time-based and a frame-based format, which
+        // needs the frame rate, is the one part that cannot run. It is skipped
+        // rather than guessed at; everything else applies.
+        if (config.postProcessingConfig().enabled()) {
+          LibQNapi::subtitlePostProcessor(config.postProcessingConfig())
+              ->perform(QString(), saveFilePath);
+        }
+
         NotificationService::showInfo(
             QObject::tr("Subnapi"),
             QObject::tr("Subtitles downloaded successfully!"),

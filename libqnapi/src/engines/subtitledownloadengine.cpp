@@ -28,6 +28,10 @@ void SubtitleDownloadEngine::setMoviePath(const QString& path) { movie = path; }
 
 QString SubtitleDownloadEngine::moviePath() { return movie; }
 
+bool SubtitleDownloadEngine::lastSearchFailedWithNetworkError() const {
+  return searchNetworkError;
+}
+
 void SubtitleDownloadEngine::clearSubtitlesList() {
   foreach (SubtitleInfo s, subtitlesList) {
     if (QFile::exists(s.sourceLocation)) QFile::remove(s.sourceLocation);

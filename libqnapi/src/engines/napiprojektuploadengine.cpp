@@ -35,7 +35,10 @@ const unsigned long NAPI_10MB = 10485760;
 // Same archive password the download path uses (napiprojektdownloadengine.cpp) -
 // confirmed unchanged for uploads by decrypting real captured archives.
 const QString kArchivePassword = "iBlm8NTigvru0Jr0";
-const QString kUploadUrl = "http://napiprojekt.pl/api/api-napiprojekt3.php";
+// HTTPS, not plain HTTP: the upload below puts the account password in the
+// request body, and base64 is encoding, not protection. The endpoint serves
+// the same responses over TLS.
+const QString kUploadUrl = "https://napiprojekt.pl/api/api-napiprojekt3.php";
 // "client" is allowlisted server-side - anything other than these two values
 // gets an explicit access-denied response (confirmed by live-testing mode=2056
 // with several client strings). Must match the real client's own identity.
@@ -192,10 +195,13 @@ NapiProjektCheckResult NapiProjektUploadEngine::checkSubtitlesExist(
   postData.append("mode=2056&");
   postData.append("client=" + kClient.toUtf8() + "&");
   postData.append("client_ver=" + QByteArray(QNAPI_VERSION) + "&");
-  postData.append("user_nick=" +
-                  QUrl::toPercentEncoding(engineConfig.nick()) + "&");
-  postData.append("user_password=" +
-                  QUrl::toPercentEncoding(engineConfig.password()) + "&");
+  // Deliberately blank, as in the real client's own requests. This check does
+  // not authenticate: the server returns the same answer for no credentials, a
+  // correct password and a wrong one alike (verified against all four cases).
+  // Sending the account password anyway bought nothing and put it on the wire
+  // once per file scanned.
+  postData.append("user_nick=&");
+  postData.append("user_password=&");
   postData.append("check_subs_id=" + videoHash.toUtf8() + "&");
   postData.append("check_subs_lang=" +
                   QUrl::toPercentEncoding(npLangWrapper(lang)));

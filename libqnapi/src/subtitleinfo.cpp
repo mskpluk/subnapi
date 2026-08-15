@@ -25,7 +25,8 @@ bool SubtitleInfo::operator<(const SubtitleInfo& other) const {
                                       v2.end());
 }
 
-SubtitleInfo SubtitleInfo::fromFailed(const QString& fileName) {
-  return SubtitleInfo("", "", "", QFileInfo(fileName).completeBaseName(), "",
-                      "", SUBTITLE_NONE);
+SubtitleInfo SubtitleInfo::fromFailed(const QString& fileName,
+                                      const QString& reason) {
+  return SubtitleInfo("", "", "", QFileInfo(fileName).completeBaseName(),
+                      reason, "", SUBTITLE_NONE);
 }

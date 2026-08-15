@@ -332,7 +332,7 @@ void GetThread::run() {
 
     if (!found) {
       ++napiFail;
-      subStatusList << SubtitleInfo::fromFailed(queue[i]);
+      subStatusList << SubtitleInfo::fromFailed(queue[i], napi.error());
       continue;
     }
 

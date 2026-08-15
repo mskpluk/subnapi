@@ -59,7 +59,11 @@ class SubtitleInfo {
 
   bool operator<(const SubtitleInfo &other) const;
 
-  static SubtitleInfo fromFailed(const QString &name);
+  // reason lands in comment(), for the summary to show alongside the file
+  // name - "no subtitles" and "the server could not be reached" look the same
+  // otherwise.
+  static SubtitleInfo fromFailed(const QString &name,
+                                 const QString &reason = "");
 };
 
 Q_DECLARE_METATYPE(SubtitleInfo);

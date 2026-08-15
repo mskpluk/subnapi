@@ -46,8 +46,16 @@ class SubtitleDownloadEngine {
   virtual bool unpack(QUuid id) = 0;
   virtual void cleanup() = 0;
 
+  // Whether the last search came back empty because the server could not be
+  // reached, rather than because it had nothing. The two are not the same
+  // answer and must not be reported as one: telling somebody their subtitles
+  // do not exist, when in fact the request never got through, sends them
+  // looking elsewhere for a file that is sitting there.
+  bool lastSearchFailedWithNetworkError() const;
+
  protected:
   QString tmpPath;
+  bool searchNetworkError = false;
 
   QList<SubtitleInfo> subtitlesList;
   QString movie;

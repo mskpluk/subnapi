@@ -57,7 +57,9 @@ void frmSummary::setSummaryList(QList<SubtitleInfo> list) {
       subData->setSubData(succIcon, s.name, QIcon(lang_path), engineIcon);
     } else {
       ++badCount;
-      subData->setSubData(failIcon, s.name);
+      subData->setSubData(failIcon, s.comment.isEmpty()
+                                        ? s.name
+                                        : s.name + " - " + s.comment);
     }
 
     ui.lwSummary->setItemWidget(listItem, subData);
