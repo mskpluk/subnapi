@@ -40,6 +40,17 @@ const QString openSubtitlesXmlRpcUrl = "http://api.opensubtitles.org/xml-rpc";
 const QString openSubtitlesDownloadUrlTpl =
     "https://dl.opensubtitles.org/en/download/file/%1";
 
+// This is the path a browser uses, so the request is made to look like one.
+// Not because the server demands it - it answers just as well with an honest
+// "Subnapi" agent, with the agent Qt would send, and with no User-Agent header
+// at all, all verified - but because a request carrying none of those is the
+// cheapest thing for the site in front of it to start refusing, and a download
+// engine that stops working on somebody else's filter change is not worth the
+// candour. The XML-RPC calls are left alone: those go to the documented API,
+// which is told who we are through LogIn's own agent parameter.
+const QString openSubtitlesDownloadUserAgent =
+    "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
+
 // A served subtitle file comes back as "application/force-download". Anything
 // else is the server answering with something other than the file - an HTML
 // page once the daily per-IP download limit is reached, for instance. Such a
@@ -315,8 +326,13 @@ bool OpenSubtitlesDownloadEngine::download(QUuid id) {
   QUrl url(OpenSubtitlesDownloadEngineConst::openSubtitlesDownloadUrlTpl.arg(
       subtitleFileId));
 
+  QNetworkRequest request{url};
+  request.setHeader(
+      QNetworkRequest::UserAgentHeader,
+      OpenSubtitlesDownloadEngineConst::openSubtitlesDownloadUserAgent);
+
   SyncHTTP http;
-  QNetworkReply *reply = http.syncGet(QNetworkRequest(url));
+  QNetworkReply *reply = http.syncGet(request);
 
   if (reply->error() != QNetworkReply::NoError) return false;
 
