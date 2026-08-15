@@ -17,6 +17,28 @@
 
 #include <QFileInfo>
 
+namespace {
+// Reads the value that follows a switch, refusing one that is itself a switch.
+// Without that check, forgetting the value silently promoted the next option
+// to be it - "-a -m fixed timing" uploaded "-m" as the subtitle author, and
+// nothing objected, because from the parser's point of view a value was there.
+Maybe<QString> optionValue(const QStringList& args, const QString& shortSwitch,
+                           const QString& longSwitch, bool* missingValue) {
+  *missingValue = false;
+
+  int idx = args.indexOf(shortSwitch);
+  if (idx == -1) idx = args.indexOf(longSwitch);
+  if (idx == -1) return nothing();
+
+  if (idx + 1 >= args.size() || args[idx + 1].startsWith("-")) {
+    *missingValue = true;
+    return nothing();
+  }
+
+  return just(args[idx + 1]);
+}
+}  // namespace
+
 CorrectSubtitlesArgParser::CorrectSubtitlesArgParser() {}
 
 QVariant CorrectSubtitlesArgParser::parse(const QStringList& args,
@@ -48,23 +70,23 @@ QVariant CorrectSubtitlesArgParser::parse(const QStringList& args,
         tr("Invalid subtitles file passed: %1").arg(subtitleFilePath)});
   }
 
-  QString author;
-  int authorIdx = args.indexOf("-a");
-  if (authorIdx == -1) {
-    authorIdx = args.indexOf("--author");
-  }
-  if (authorIdx != -1 && authorIdx + 1 < args.size()) {
-    author = args[authorIdx + 1];
-  }
+  bool missingValue = false;
 
-  QString comment;
-  int commentIdx = args.indexOf("-m");
-  if (commentIdx == -1) {
-    commentIdx = args.indexOf("--comment");
+  Maybe<QString> authorOpt =
+      optionValue(args, "-a", "--author", &missingValue);
+  if (missingValue) {
+    return QVariant::fromValue(
+        ParseError{tr("You need to pass an author name after -a argument")});
   }
-  if (commentIdx != -1 && commentIdx + 1 < args.size()) {
-    comment = args[commentIdx + 1];
+  QString author = authorOpt ? authorOpt.value() : QString();
+
+  Maybe<QString> commentOpt =
+      optionValue(args, "-m", "--comment", &missingValue);
+  if (missingValue) {
+    return QVariant::fromValue(
+        ParseError{tr("You need to pass a comment after -m argument")});
   }
+  QString comment = commentOpt ? commentOpt.value() : QString();
 
   return QVariant::fromValue(ParsedCommand{
       config, QVariant::fromValue(QNapiCommand::UploadSubtitles{

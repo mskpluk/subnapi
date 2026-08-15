@@ -18,6 +18,7 @@
 #include "qnapiopendialog.h"
 #include "subtitlelanguage.h"
 
+#include <QCloseEvent>
 #include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -96,9 +97,36 @@ void frmNapiProjektUpload::correctionToggled(bool correction) {
                      : tr("Subnapi - Upload subtitles to NapiProjekt"));
 }
 
+// An upload cannot be taken back once it has started - it is a write to
+// somebody else's database - so there is no way out of this dialog while one
+// is running. Rather than quietly swallowing the attempt, the buttons that
+// would leave are visibly disabled for the duration, so that a dead Escape key
+// reads as deliberate instead of as a frozen window.
+void frmNapiProjektUpload::setUploadInProgress(bool inProgress) {
+  if (QPushButton *ok = ui.buttonBox->button(QDialogButtonBox::Ok))
+    ok->setEnabled(!inProgress);
+  if (QPushButton *cancel = ui.buttonBox->button(QDialogButtonBox::Cancel))
+    cancel->setEnabled(!inProgress);
+
+  ui.pbVideoFileSelect->setEnabled(!inProgress);
+  ui.pbSubtitleFileSelect->setEnabled(!inProgress);
+  ui.cbCorrection->setEnabled(!inProgress);
+}
+
 void frmNapiProjektUpload::reject() {
   if (uploadThread.isRunning()) return;
   QDialog::reject();
+}
+
+void frmNapiProjektUpload::closeEvent(QCloseEvent *event) {
+  // The window manager's own close button goes around the disabled Cancel, so
+  // it is refused here too - otherwise this one route out would still be the
+  // silent kind.
+  if (uploadThread.isRunning()) {
+    event->ignore();
+    return;
+  }
+  QDialog::closeEvent(event);
 }
 
 void frmNapiProjektUpload::okClicked() {
@@ -133,8 +161,7 @@ void frmNapiProjektUpload::okClicked() {
                      : NapiProjektUploadMode::NewSubtitles;
   request.comment = ui.cbCorrection->isChecked() ? ui.leComment->text() : "";
 
-  ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-  ui.buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
+  setUploadInProgress(true);
   ui.lbStatus->setText(tr("Uploading..."));
 
   uploadThread.setConfig(config);
@@ -151,8 +178,7 @@ void frmNapiProjektUpload::uploadFinished() {
   // still running.
   uploadThread.wait();
 
-  ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
-  ui.buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
+  setUploadInProgress(false);
   ui.lbStatus->setText("");
 
   switch (uploadThread.result) {

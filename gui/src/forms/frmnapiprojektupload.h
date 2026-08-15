@@ -64,6 +64,9 @@ class frmNapiProjektUpload : public QDialog {
   void uploadFinished();
 
  private:
+  void closeEvent(QCloseEvent *event) override;
+  void setUploadInProgress(bool inProgress);
+
   Ui::frmNapiProjektUpload ui;
   UploadThread uploadThread;
 };

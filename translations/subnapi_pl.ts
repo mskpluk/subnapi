@@ -260,27 +260,37 @@
 <context>
     <name>CorrectSubtitlesArgParser</name>
     <message>
-        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="34"/>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="56"/>
         <source>You need to pass a video file path and a subtitles file path after %1 argument</source>
         <translation>Po argumencie %1 należy podać ścieżkę do pliku wideo i pliku z napisami</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="44"/>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="66"/>
         <source>Invalid video file passed: %1</source>
         <translation>Podano nieprawidłowy plik wideo: %1</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="48"/>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="70"/>
         <source>Invalid subtitles file passed: %1</source>
         <translation>Podano nieprawidłowy plik z napisami: %1</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="76"/>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="79"/>
+        <source>You need to pass an author name after -a argument</source>
+        <translation>Po argumencie -a należy podać nazwę autora</translation>
+    </message>
+    <message>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="87"/>
+        <source>You need to pass a comment after -m argument</source>
+        <translation>Po argumencie -m należy podać komentarz</translation>
+    </message>
+    <message>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="98"/>
         <source>video subs</source>
         <translation>wideo napisy</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="77"/>
+        <location filename="../libqnapi/src/parser/correctsubtitlesargparser.cpp" line="99"/>
         <source>Send a subtitles correction to NapiProjekt (requires an account configured in Settings; optionally pass -a [name] for author and -m [text] for a comment)</source>
         <translation>Wyślij poprawkę napisów do NapiProjekt (wymaga konta skonfigurowanego w Ustawieniach; opcjonalnie podaj -a [autor] dla autora i -m [tekst] dla komentarza)</translation>
     </message>
@@ -902,27 +912,32 @@
 <context>
     <name>UploadSubtitlesArgParser</name>
     <message>
-        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="34"/>
+        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="56"/>
         <source>You need to pass a video file path and a subtitles file path after %1 argument</source>
         <translation>Po argumencie %1 należy podać ścieżkę do pliku wideo i pliku z napisami</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="44"/>
+        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="66"/>
         <source>Invalid video file passed: %1</source>
         <translation>Podano nieprawidłowy plik wideo: %1</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="48"/>
+        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="70"/>
         <source>Invalid subtitles file passed: %1</source>
         <translation>Podano nieprawidłowy plik z napisami: %1</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="67"/>
+        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="79"/>
+        <source>You need to pass an author name after -a argument</source>
+        <translation>Po argumencie -a należy podać nazwę autora</translation>
+    </message>
+    <message>
+        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="90"/>
         <source>video subs</source>
         <translation>wideo napisy</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="68"/>
+        <location filename="../libqnapi/src/parser/uploadsubtitlesargparser.cpp" line="91"/>
         <source>Upload new subtitles to NapiProjekt (requires an account configured in Settings; optionally pass -a [name] for author)</source>
         <translation>Wyślij nowe napisy do NapiProjekt (wymaga konta skonfigurowanego w Ustawieniach; opcjonalnie podaj -a [autor] dla autora)</translation>
     </message>
@@ -1399,7 +1414,7 @@
     <name>frmNapiProjektUpload</name>
     <message>
         <location filename="../gui/ui/frmnapiprojektupload.ui" line="14"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="96"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="97"/>
         <source>Subnapi - Upload subtitles to NapiProjekt</source>
         <translation>Subnapi - Wysyłanie napisów do NapiProjekt</translation>
     </message>
@@ -1434,84 +1449,84 @@
         <translation>Komentarz do poprawki:</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="74"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="75"/>
         <source>Choose a video file</source>
         <translation>Wybierz plik wideo</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="83"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="84"/>
         <source>Choose a subtitles file</source>
         <translation>Wybierz plik z napisami</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="95"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="96"/>
         <source>Subnapi - Send a subtitles correction to NapiProjekt</source>
         <translation>Subnapi - Wysyłanie poprawki napisów do NapiProjekt</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="106"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="134"/>
         <source>Select a valid video file.</source>
         <translation>Wybierz prawidłowy plik wideo.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="106"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="110"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="120"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="160"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="167"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="171"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="175"/>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="180"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="134"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="138"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="148"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="186"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="193"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="197"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="201"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="206"/>
         <source>Subnapi</source>
         <translation>Subnapi</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="111"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="139"/>
         <source>Select a valid subtitles file.</source>
         <translation>Wybierz prawidłowy plik z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="121"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="149"/>
         <source>Configure your NapiProjekt account (nick and password) in Settings before uploading.</source>
         <translation>Skonfiguruj konto NapiProjekt (login i hasło) w Ustawieniach przed wysłaniem napisów.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="138"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="165"/>
         <source>Uploading...</source>
         <translation>Wysyłanie...</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="162"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="188"/>
         <source>Correction sent, pending moderation.</source>
         <translation>Poprawka została wysłana, oczekuje na moderację.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="163"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="189"/>
         <source>Subtitles uploaded successfully!</source>
         <translation>Napisy zostały pomyślnie wysłane!</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="168"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="194"/>
         <source>Could not convert the subtitles file.</source>
         <translation>Nie udało się przekonwertować pliku z napisami.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="172"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="198"/>
         <source>Could not create the upload archive.</source>
         <translation>Nie udało się utworzyć archiwum do wysyłki.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="176"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="202"/>
         <source>A network error occurred while uploading.</source>
         <translation>Podczas wysyłania wystąpił błąd sieci.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="182"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="208"/>
         <source>NapiProjekt rejected the upload.</source>
         <translation>NapiProjekt odrzucił przesłane napisy.</translation>
     </message>
     <message>
-        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="183"/>
+        <location filename="../gui/src/forms/frmnapiprojektupload.cpp" line="209"/>
         <source>NapiProjekt rejected the upload: %1</source>
         <translation>NapiProjekt odrzucił wysyłkę: %1</translation>
     </message>
