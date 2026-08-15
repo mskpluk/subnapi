@@ -73,11 +73,25 @@ echo
 echo "Built package(s):"
 ls -la "$OUT_DIR"/*.deb
 
-DEB_MAIN=$(ls "$OUT_DIR"/subnapi_*.deb 2>/dev/null | grep -v dbgsym | head -1)
+# Named from debian/changelog rather than picked out of the directory. The
+# output directory is not emptied between releases, and taking the first match
+# from `ls` takes the alphabetically first version, not the one just built - so
+# a leftover package from an earlier release silently became what got verified,
+# and the run reported success for something nobody had built that day.
+DEB_VERSION=$(dpkg-parsechangelog -l debian/changelog -S Version)
+DEB_MAIN="$OUT_DIR/subnapi_${DEB_VERSION}_amd64.deb"
 
-if [ "$SKIP_VERIFY" = "1" ] || [ -z "$DEB_MAIN" ]; then
+if [ ! -f "$DEB_MAIN" ]; then
+    echo "Package for version $DEB_VERSION not found at $DEB_MAIN" >&2
+    exit 1
+fi
+
+if [ "$SKIP_VERIFY" = "1" ]; then
     exit 0
 fi
+
+echo
+echo "Verifying $(basename "$DEB_MAIN") (version $DEB_VERSION from debian/changelog)"
 
 verify_on() {
     image="$1"
