@@ -145,8 +145,14 @@ QString EncodingUtils::detectBufferEncoding(const QByteArray &buffer) const {
     if (*bomEncoding == QStringConverter::Utf8) return "UTF-8";
   }
 
+  // The result of decode() has to be assigned: it hands back a proxy that only
+  // performs the conversion once something turns it into a QString. Dropping it
+  // means no conversion ever runs, so hasError() stays false and every file
+  // without a BOM is reported as UTF-8 - which also makes the codec matching
+  // below unreachable.
   QStringDecoder utf8Decoder(QStringConverter::Utf8);
-  utf8Decoder.decode(buffer);
+  const QString utf8Decoded = utf8Decoder.decode(buffer);
+  Q_UNUSED(utf8Decoded);
   if (!utf8Decoder.hasError()) return "UTF-8";
 
   int bestMatch = 0;
