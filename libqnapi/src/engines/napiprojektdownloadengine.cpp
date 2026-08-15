@@ -73,8 +73,6 @@ QString NapiProjektDownloadEngine::checksum(QString filename) {
 }
 
 bool NapiProjektDownloadEngine::lookForSubtitles(QString lang) {
-  searchNetworkError = false;
-
   Maybe<QString> tmpPackedFileOpt = downloadByLangAndChecksum(lang, checkSum);
 
   if (!tmpPackedFileOpt) {

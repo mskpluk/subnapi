@@ -88,19 +88,30 @@ bool QNapi::lookForSubtitles(QString lang, QString engine) {
 
   if (!result) {
     bool networkError = false;
+    QString authErrorEngine;
+
     foreach (QSharedPointer<SubtitleDownloadEngine> e, enginesList) {
-      if ((engine.isEmpty() || e->meta().name() == engine) &&
-          e->lastSearchFailedWithNetworkError()) {
-        networkError = true;
-        break;
-      }
+      if (!engine.isEmpty() && e->meta().name() != engine) continue;
+
+      if (e->lastSearchFailedWithNetworkError()) networkError = true;
+      if (e->lastSearchFailedWithAuthError() && authErrorEngine.isEmpty())
+        authErrorEngine = e->meta().name();
     }
 
-    errorMsg = networkError
-                   ? QObject::tr("Could not reach the subtitles server - it is "
-                                 "unknown whether subtitles exist. Try again "
-                                 "in a moment.")
-                   : QObject::tr("No subtitles found!");
+    // Wrong credentials first: that one the user can act on, and it stays
+    // wrong until they do, whereas a server that could not be reached is
+    // usually worth simply retrying.
+    if (!authErrorEngine.isEmpty()) {
+      errorMsg = QObject::tr("%1 rejected the account details - check the nick "
+                             "and password in Settings.")
+                     .arg(authErrorEngine);
+    } else if (networkError) {
+      errorMsg = QObject::tr(
+          "Could not reach the subtitles server - it is unknown whether "
+          "subtitles exist. Try again in a moment.");
+    } else {
+      errorMsg = QObject::tr("No subtitles found!");
+    }
   }
 
   return result;

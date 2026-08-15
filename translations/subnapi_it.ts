@@ -825,12 +825,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/qnapi.cpp" line="100"/>
+        <location filename="../libqnapi/src/qnapi.cpp" line="105"/>
+        <source>%1 rejected the account details - check the nick and password in Settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../libqnapi/src/qnapi.cpp" line="109"/>
         <source>Could not reach the subtitles server - it is unknown whether subtitles exist. Try again in a moment.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/qnapi.cpp" line="103"/>
+        <location filename="../libqnapi/src/qnapi.cpp" line="113"/>
         <source>No subtitles found!</source>
         <translation>Nessun sottotitolo trovato!</translation>
     </message>

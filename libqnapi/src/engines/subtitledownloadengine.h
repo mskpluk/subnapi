@@ -53,9 +53,15 @@ class SubtitleDownloadEngine {
   // looking elsewhere for a file that is sitting there.
   bool lastSearchFailedWithNetworkError() const;
 
+  // Whether the last search was turned away because the account details are
+  // wrong. Also not the same as "there are no subtitles": left as that, a
+  // mistyped password looks like an empty database and stays that way.
+  bool lastSearchFailedWithAuthError() const;
+
  protected:
   QString tmpPath;
   bool searchNetworkError = false;
+  bool searchAuthError = false;
 
   QList<SubtitleInfo> subtitlesList;
   QString movie;

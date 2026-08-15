@@ -14,12 +14,33 @@
 
 #include "syncxmlrpc.h"
 
+#include <QTimer>
+
+namespace {
+// Neither slot below is called if the server accepts the connection and then
+// says nothing, which would leave the wait here running for good - on a worker
+// thread that the dialogs join with wait() when they close. Guarded rather
+// than trusted; matches the timeout SyncHTTP applies to its own requests.
+const int kRequestTimeoutMsecs = 30000;
+}  // namespace
+
 SyncXmlRpc::SyncXmlRpc(const QUrl &endPoint) : rpc(endPoint) {}
 
 bool SyncXmlRpc::request(const QString &method, const QVariantList &args) {
+  result = false;
+
   rpc.call(method, args, this, SLOT(whenResponse(QVariant &)), this,
            SLOT(whenFault(int, const QString &)));
+
+  QTimer timeout;
+  timeout.setSingleShot(true);
+  connect(&timeout, &QTimer::timeout, &loop, &QEventLoop::quit);
+  timeout.start(kRequestTimeoutMsecs);
+
   loop.exec();
+
+  // Left as a failure when the timer is what ended the wait: neither slot ran,
+  // so nothing was received and result still holds the false set above.
   return result;
 }
 

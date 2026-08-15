@@ -641,12 +641,17 @@
         <translation>Nie udało się pobrać napisów</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/qnapi.cpp" line="100"/>
+        <location filename="../libqnapi/src/qnapi.cpp" line="105"/>
+        <source>%1 rejected the account details - check the nick and password in Settings.</source>
+        <translation>%1 odrzucił dane konta - sprawdź nick i hasło w Ustawieniach.</translation>
+    </message>
+    <message>
+        <location filename="../libqnapi/src/qnapi.cpp" line="109"/>
         <source>Could not reach the subtitles server - it is unknown whether subtitles exist. Try again in a moment.</source>
         <translation>Nie udało się połączyć z serwerem napisów - nie wiadomo, czy napisy istnieją. Spróbuj za chwilę.</translation>
     </message>
     <message>
-        <location filename="../libqnapi/src/qnapi.cpp" line="103"/>
+        <location filename="../libqnapi/src/qnapi.cpp" line="113"/>
         <source>No subtitles found!</source>
         <translation>Nie znaleziono napisów!</translation>
     </message>

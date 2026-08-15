@@ -24,8 +24,8 @@ SubtitleDownloadEngineMetadata Napisy24DownloadEngine::metadata =
     SubtitleDownloadEngineMetadata(
         "Napisy24",
         QObject::tr("<b>www.napisy24.pl</b> subtitle download engine"),
-        just(QUrl("http://napisy24.pl/cb-registration/registers")),
-        just(QUrl("http://napisy24.pl/dodaj-napisy")));
+        just(QUrl("https://napisy24.pl/cb-registration/registers")),
+        just(QUrl("https://napisy24.pl/dodaj-napisy")));
 
 Napisy24DownloadEngine::Napisy24DownloadEngine(
     const QString &tmpPath, const EngineConfig &config,
@@ -72,7 +72,9 @@ QString Napisy24DownloadEngine::checksum(QString filename) {
 bool Napisy24DownloadEngine::lookForSubtitles(QString lang) {
   if (lang != "pl") return false;
 
-  const QUrl url = QUrl("http://napisy24.pl/run/CheckSubAgent.php");
+  // HTTPS: the account name and password below travel in the request body,
+  // and this endpoint serves the same answers over TLS.
+  const QUrl url = QUrl("https://napisy24.pl/run/CheckSubAgent.php");
 
   auto credentials = getCredentials();
 
@@ -93,9 +95,23 @@ bool Napisy24DownloadEngine::lookForSubtitles(QString lang) {
                 "application/x-www-form-urlencoded");
 
   QNetworkReply *reply = http.syncPost(req, data);
-  if (reply->error() != QNetworkReply::NoError) return false;
+  if (reply->error() != QNetworkReply::NoError) {
+    searchNetworkError = true;
+    return false;
+  }
 
   QByteArray respData = reply->readAll();
+
+  // The server distinguishes its answers and so should this: "OK-2" carries
+  // subtitles, "OK-0" means it has none, and "login error" means the account
+  // details were refused. Treating the last of those as "no subtitles" left
+  // somebody with a mistyped password searching an apparently empty database
+  // forever, with nothing ever saying why.
+  if (respData.startsWith("login error")) {
+    searchAuthError = true;
+    return false;
+  }
+
   if (!respData.startsWith("OK-2")) return false;
 
   QString tmpPackedFile = generateTmpPath();
@@ -104,9 +120,12 @@ bool Napisy24DownloadEngine::lookForSubtitles(QString lang) {
   if (file.exists()) file.remove();
   if (!file.open(QIODevice::WriteOnly)) return false;
 
-  long r = file.write(respData.mid(respData.indexOf("||") + 2));
+  // Compared against the length actually handed over: write() answers -1 when
+  // it fails, and -1 passes a plain truth test.
+  const QByteArray payload = respData.mid(respData.indexOf("||") + 2);
+  const qint64 written = file.write(payload);
   file.close();
-  if (!r) return false;
+  if (written != payload.size()) return false;
 
   subtitlesList << SubtitleInfo(lang, meta().name(), tmpPackedFile,
                                 QFileInfo(movie).completeBaseName(), "", "txt",

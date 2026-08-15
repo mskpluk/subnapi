@@ -32,7 +32,18 @@ bool SubtitleDownloadEngine::lastSearchFailedWithNetworkError() const {
   return searchNetworkError;
 }
 
+bool SubtitleDownloadEngine::lastSearchFailedWithAuthError() const {
+  return searchAuthError;
+}
+
 void SubtitleDownloadEngine::clearSubtitlesList() {
+  // Cleared here rather than at the start of each search: one file is searched
+  // once per language, and the backup-language pass would otherwise wipe what
+  // the first pass recorded - including a pass that returns immediately
+  // because it does not handle that language at all.
+  searchNetworkError = false;
+  searchAuthError = false;
+
   foreach (SubtitleInfo s, subtitlesList) {
     if (QFile::exists(s.sourceLocation)) QFile::remove(s.sourceLocation);
   }
