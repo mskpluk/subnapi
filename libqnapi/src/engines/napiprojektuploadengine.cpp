@@ -28,6 +28,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QRegularExpression>
+#include <QXmlStreamReader>
 #include <QUrl>
 
 namespace {
@@ -193,16 +194,26 @@ NapiProjektUploadResult NapiProjektUploadEngine::upload(
   }
 
   // The reason the server gave, so it can be repeated to the user instead of
-  // a bare "rejected". It arrives as <error>...</error>; anything else is
-  // passed on as-is, trimmed of markup, rather than thrown away.
-  static const QRegularExpression errorTag("<error>(.*?)</error>",
-                                           QRegularExpression::DotMatchesEverythingOption);
-  QRegularExpressionMatch match = errorTag.match(response);
-  if (match.hasMatch()) {
-    serverMessage = match.captured(1).trimmed();
-  } else {
-    // Tags become spaces rather than vanishing, so text from neighbouring
-    // elements does not end up run together into one word.
+  // a bare "rejected".
+  //
+  // Read with an XML parser rather than picked out with a pattern, because the
+  // accented letters arrive as character references - "znajduj&#x105;" for
+  // "znajdują" - and a message shown to a Polish-speaking user with every
+  // second word broken is barely better than no message. The parser resolves
+  // those; matching the text out by hand does not.
+  QXmlStreamReader xml(response);
+  while (!xml.atEnd()) {
+    if (xml.readNext() == QXmlStreamReader::StartElement &&
+        xml.name() == QStringLiteral("error")) {
+      serverMessage = xml.readElementText().trimmed();
+      break;
+    }
+  }
+
+  // Nothing named the reason, so the whole reply stands in for it: tags become
+  // spaces rather than vanishing, or text from neighbouring elements ends up
+  // run together into one word.
+  if (serverMessage.isEmpty()) {
     serverMessage = response.trimmed()
                         .replace(QRegularExpression("<[^>]*>"), " ")
                         .simplified();
