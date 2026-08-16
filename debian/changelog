@@ -1,3 +1,11 @@
+subnapi (0.5.5-1) unstable; urgency=medium
+
+  * Read NapiProjekt's reason for refusing an upload with an XML parser, so
+    that Polish accented letters, which arrive as character references,
+    survive into the message shown to the user.
+
+ -- mskpluk <mskpluk@users.noreply.github.com>  Sun, 16 Aug 2026 12:30:00 +0000
+
 subnapi (0.5.4-1) unstable; urgency=medium
 
   * Report a failed search honestly: a server that could not be reached, and

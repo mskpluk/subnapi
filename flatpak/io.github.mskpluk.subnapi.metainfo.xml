@@ -36,6 +36,15 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.5" date="2026-08-16">
+      <description>
+        <p>
+          Shows NapiProjekt's reason for refusing an upload with its Polish
+          accented letters intact, instead of leaving them as the character
+          references the server sends.
+        </p>
+      </description>
+    </release>
     <release version="0.5.4" date="2026-08-15">
       <description>
         <p>
