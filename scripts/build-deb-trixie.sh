@@ -35,7 +35,18 @@ if ! command -v "$CONTAINER_CMD" >/dev/null 2>&1; then
 fi
 
 VERSION=$(scripts/version.sh)
-echo "Building subnapi $VERSION .deb against $BASE_IMAGE ..."
+
+# The package is named from debian/changelog, so both have to agree; checked
+# here rather than after a build that takes minutes. The output directory is
+# not emptied between releases, so the package is picked out by this version,
+# never by whatever `ls` happens to list first.
+DEB_VERSION=$(sed -n '1s/^[^ ]* (\([^)]*\)).*/\1/p' debian/changelog)
+DEB_FILE_VERSION=${DEB_VERSION#*:}   # dpkg leaves the epoch out of file names
+if [ "${DEB_FILE_VERSION%-*}" != "$VERSION" ]; then
+    echo "debian/changelog says $DEB_VERSION, version.h says $VERSION" >&2
+    exit 1
+fi
+echo "Building subnapi $DEB_VERSION .deb against $BASE_IMAGE ..."
 
 STAGE_DIR=$(mktemp -d)
 trap 'rm -rf "$STAGE_DIR"' EXIT
@@ -71,15 +82,9 @@ OUT_DIR_ABS=$(cd "$OUT_DIR" && pwd)
 
 echo
 echo "Built package(s):"
-ls -la "$OUT_DIR"/*.deb
+ls -la "$OUT_DIR"/subnapi*_"${DEB_FILE_VERSION}"_*.deb
 
-# Named from debian/changelog rather than picked out of the directory. The
-# output directory is not emptied between releases, and taking the first match
-# from `ls` takes the alphabetically first version, not the one just built - so
-# a leftover package from an earlier release silently became what got verified,
-# and the run reported success for something nobody had built that day.
-DEB_VERSION=$(dpkg-parsechangelog -l debian/changelog -S Version)
-DEB_MAIN="$OUT_DIR/subnapi_${DEB_VERSION}_amd64.deb"
+DEB_MAIN="$OUT_DIR/subnapi_${DEB_FILE_VERSION}_amd64.deb"
 
 if [ ! -f "$DEB_MAIN" ]; then
     echo "Package for version $DEB_VERSION not found at $DEB_MAIN" >&2

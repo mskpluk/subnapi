@@ -44,6 +44,96 @@ const QString kUploadUrl = "https://napiprojekt.pl/api/api-napiprojekt3.php";
 // gets an explicit access-denied response (confirmed by live-testing mode=2056
 // with several client strings). Must match the real client's own identity.
 const QString kClient = "NapiProjekt";
+
+// Numeric character references and the few named entities a PHP backend tends
+// to emit. Only needed where the XML parser has given up; &nbsp; is one of the
+// things that make it give up, since XML does not define it.
+QString decodeReferences(const QString& text) {
+  static const QRegularExpression reference(
+      QStringLiteral("&(#[xX][0-9A-Fa-f]+|#[0-9]+|[a-z]+);"));
+  QString result;
+  qsizetype last = 0;
+  auto it = reference.globalMatch(text);
+  while (it.hasNext()) {
+    const QRegularExpressionMatch m = it.next();
+    result += text.mid(last, m.capturedStart() - last);
+    const QString name = m.captured(1);
+    QString replacement = m.captured(0);
+    if (name.startsWith('#')) {
+      bool ok = false;
+      const bool hex = name.size() > 1 && name.at(1).toLower() == 'x';
+      const uint cp = hex ? name.mid(2).toUInt(&ok, 16) : name.mid(1).toUInt(&ok);
+      if (ok && cp > 0 && cp <= 0x10FFFF && (cp < 0xD800 || cp > 0xDFFF)) {
+        const char32_t c = cp;
+        replacement = QString::fromUcs4(&c, 1);
+      }
+    } else if (name == "amp") {
+      replacement = "&";
+    } else if (name == "lt") {
+      replacement = "<";
+    } else if (name == "gt") {
+      replacement = ">";
+    } else if (name == "quot") {
+      replacement = "\"";
+    } else if (name == "apos") {
+      replacement = "'";
+    } else if (name == "nbsp") {
+      replacement = " ";
+    }
+    result += replacement;
+    last = m.capturedEnd();
+  }
+  result += text.mid(last);
+  return result;
+}
+
+// The reason the server gave for refusing an upload, so it can be repeated to
+// the user instead of a bare "rejected". Empty when the reply names one but
+// leaves it blank.
+//
+// Read with an XML parser rather than picked out with a pattern, because the
+// accented letters arrive as character references - "znajduj&#x105;" for
+// "znajdują" - and a message shown to a Polish-speaking user with every second
+// word broken is barely better than no message.
+QString refusalReason(const QByteArray& body) {
+  static const QRegularExpression tags(QStringLiteral("<[^>]*>"));
+
+  // Anything ahead of the XML declaration - a PHP notice, a BOM, whitespace -
+  // would stop the parser before it got anywhere.
+  const qsizetype start = body.indexOf("<?xml");
+  QXmlStreamReader xml(start > 0 ? body.mid(start) : body);
+  bool found = false;
+  QString message;
+  while (!xml.atEnd()) {
+    if (xml.readNext() == QXmlStreamReader::StartElement &&
+        xml.name() == QStringLiteral("error")) {
+      found = true;
+      message = xml.readElementText(QXmlStreamReader::IncludeChildElements)
+                    .trimmed();
+      break;
+    }
+  }
+
+  // The parser gave up before or inside <error>, so whatever it returned may be
+  // cut short. Pick the element out by hand and decode what it would have.
+  if (xml.hasError()) {
+    static const QRegularExpression error(
+        QStringLiteral("<error(?:\\s[^>]*)?>(.*?)</error>"),
+        QRegularExpression::DotMatchesEverythingOption);
+    const QRegularExpressionMatch m = error.match(QString::fromUtf8(body));
+    if (m.hasMatch()) {
+      found = true;
+      message = decodeReferences(m.captured(1).replace(tags, " ")).simplified();
+    }
+  }
+  if (found) return message;
+
+  // Nothing named the reason, so the whole reply stands in for it: tags become
+  // spaces rather than vanishing, or text from neighbouring elements ends up
+  // run together into one word.
+  return decodeReferences(QString::fromUtf8(body).replace(tags, " "))
+      .simplified();
+}
 }  // namespace
 
 NapiProjektUploadEngine::NapiProjektUploadEngine(
@@ -188,37 +278,14 @@ NapiProjektUploadResult NapiProjektUploadEngine::upload(
     return NapiProjektUploadResult::NetworkError;
   }
 
-  QString response = QString::fromUtf8(reply->readAll());
-  if (response.contains("<status>uploaded</status>")) {
+  // Bytes, not a decoded string, so the parser can honour the encoding the
+  // XML declaration names.
+  const QByteArray body = reply->readAll();
+  if (body.contains("<status>uploaded</status>")) {
     return NapiProjektUploadResult::Uploaded;
   }
 
-  // The reason the server gave, so it can be repeated to the user instead of
-  // a bare "rejected".
-  //
-  // Read with an XML parser rather than picked out with a pattern, because the
-  // accented letters arrive as character references - "znajduj&#x105;" for
-  // "znajdują" - and a message shown to a Polish-speaking user with every
-  // second word broken is barely better than no message. The parser resolves
-  // those; matching the text out by hand does not.
-  QXmlStreamReader xml(response);
-  while (!xml.atEnd()) {
-    if (xml.readNext() == QXmlStreamReader::StartElement &&
-        xml.name() == QStringLiteral("error")) {
-      serverMessage = xml.readElementText().trimmed();
-      break;
-    }
-  }
-
-  // Nothing named the reason, so the whole reply stands in for it: tags become
-  // spaces rather than vanishing, or text from neighbouring elements ends up
-  // run together into one word.
-  if (serverMessage.isEmpty()) {
-    serverMessage = response.trimmed()
-                        .replace(QRegularExpression("<[^>]*>"), " ")
-                        .simplified();
-  }
-
+  serverMessage = refusalReason(body);
   return NapiProjektUploadResult::ServerRejected;
 }
 

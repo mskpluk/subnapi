@@ -46,7 +46,8 @@ has been inactive since 2022. Version 0.5.0 is the first Subnapi release.
 ## Installing
 
 Prebuilt packages are available on the
-[Releases](https://github.com/mskpluk/subnapi/releases) page.
+[Releases](https://github.com/mskpluk/subnapi/releases) page; replace
+`VERSION` below with the one you downloaded.
 
 ### Debian / Ubuntu package
 
@@ -54,7 +55,7 @@ The `.deb` is built against Debian 13 "trixie" and installs cleanly on
 Debian 13.x and Ubuntu 26.04 LTS:
 
 ```
-$ sudo apt install ./subnapi_*_amd64.deb
+$ sudo apt install ./subnapi_VERSION-1_amd64.deb
 ```
 
 ### Flatpak
@@ -64,7 +65,7 @@ required runtime (`org.kde.Platform` 6.11) is fetched from Flathub
 automatically:
 
 ```
-$ flatpak install ./subnapi-*.flatpak
+$ flatpak install ./subnapi-VERSION.flatpak
 $ flatpak run io.github.mskpluk.subnapi
 ```
 

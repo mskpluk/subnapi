@@ -201,13 +201,18 @@ void frmNapiProjektUpload::uploadFinished() {
       QMessageBox::critical(this, tr("Subnapi"),
                             tr("A network error occurred while uploading."));
       return;
-    case NapiProjektUploadResult::ServerRejected:
-      QMessageBox::critical(
-          this, tr("Subnapi"),
-          uploadThread.serverMessage.isEmpty()
-              ? tr("NapiProjekt rejected the upload.")
-              : tr("NapiProjekt rejected the upload: %1")
-                    .arg(uploadThread.serverMessage));
+    case NapiProjektUploadResult::ServerRejected: {
+      // Plain text: the message comes from the server, and the default format
+      // would render any markup in it.
+      QMessageBox box(QMessageBox::Critical, tr("Subnapi"),
+                      uploadThread.serverMessage.isEmpty()
+                          ? tr("NapiProjekt rejected the upload.")
+                          : tr("NapiProjekt rejected the upload: %1")
+                                .arg(uploadThread.serverMessage),
+                      QMessageBox::Ok, this);
+      box.setTextFormat(Qt::PlainText);
+      box.exec();
       return;
+    }
   }
 }
