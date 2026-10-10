@@ -36,6 +36,14 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.7" date="2026-10-10">
+      <description>
+        <p>
+          Files added while subtitles are downloading are no longer lost, and
+          the program no longer crashes or hangs when that happens.
+        </p>
+      </description>
+    </release>
     <release version="0.5.6" date="2026-10-10">
       <description>
         <p>
