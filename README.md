@@ -54,7 +54,7 @@ The `.deb` is built against Debian 13 "trixie" and installs cleanly on
 Debian 13.x and Ubuntu 26.04 LTS:
 
 ```
-$ sudo apt install ./subnapi_0.5.0-1_amd64.deb
+$ sudo apt install ./subnapi_*_amd64.deb
 ```
 
 ### Flatpak
@@ -64,7 +64,7 @@ required runtime (`org.kde.Platform` 6.11) is fetched from Flathub
 automatically:
 
 ```
-$ flatpak install ./subnapi-0.5.0.flatpak
+$ flatpak install ./subnapi-*.flatpak
 $ flatpak run io.github.mskpluk.subnapi
 ```
 
