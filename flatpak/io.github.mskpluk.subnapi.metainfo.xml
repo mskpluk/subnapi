@@ -36,6 +36,14 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.6" date="2026-10-10">
+      <description>
+        <p>
+          Bugfix release: passwords with special characters, OpenSubtitles
+          login over HTTPS, subtitle encoding and file naming fixes.
+        </p>
+      </description>
+    </release>
     <release version="0.5.5" date="2026-08-16">
       <description>
         <p>
