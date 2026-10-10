@@ -294,6 +294,7 @@ void GetThread::run() {
 
         ABORT_POINT
 
+        if (languageBackup.isEmpty()) continue;
         emit actionChange(
             tr("Searching for subtitles in alternative language [%1] (%2)...")
                 .arg(languageBackup, e));

@@ -101,12 +101,14 @@ Maybe<QString> NapiProjektDownloadEngine::downloadByLangAndChecksum(
     QString lang, QString checksum) {
   if (checksum.isEmpty()) return nothing();
 
-  QString urlTxt = napiDownloadUrlTpl.arg(npLangWrapper(lang))
-                       .arg(checksum)
-                       .arg(npFDigest(checksum))
-                       .arg(engineConfig.nick())
-                       .arg(engineConfig.password())
-                       .arg(napiOS());
+  // Credentials percent-encoded, or an '&' or '#' in a password cuts the
+  // query short. One arg() call rather than a chain: a chained arg() would
+  // treat an encoded "%3D" in the password as a placeholder of its own.
+  QString urlTxt = napiDownloadUrlTpl.arg(
+      npLangWrapper(lang), checksum, npFDigest(checksum),
+      QString::fromLatin1(QUrl::toPercentEncoding(engineConfig.nick())),
+      QString::fromLatin1(QUrl::toPercentEncoding(engineConfig.password())),
+      napiOS());
 
   QUrl url(urlTxt);
 
@@ -166,7 +168,9 @@ void NapiProjektDownloadEngine::cleanup() {
 bool NapiProjektDownloadEngine::checkUser(const QString &nick,
                                           const QString &pass) {
   SyncHTTP http;
-  QString urlTxt = napiCheckUserUrlTpl.arg(nick).arg(pass);
+  QString urlTxt = napiCheckUserUrlTpl.arg(
+      QString::fromLatin1(QUrl::toPercentEncoding(nick)),
+      QString::fromLatin1(QUrl::toPercentEncoding(pass)));
 
   QUrl url(urlTxt);
   QNetworkReply *reply = http.syncGet(QNetworkRequest(url));

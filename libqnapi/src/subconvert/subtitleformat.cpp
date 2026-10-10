@@ -102,9 +102,9 @@ QVector<SubToken> SubtitleFormat::decodeTokenStream(QString tokenStream) const {
     tokens.push_back(wordTok);
   }
 
-  if (!tokens.isEmpty() && tokens[0].type == STT_WS) {
-    while (tokens[0].type == STT_WS) tokens.pop_front();
-  }
+  // Text made of nothing but spaces leaves no tokens once they are gone, so
+  // the emptiness check belongs in the loop, not only before it.
+  while (!tokens.isEmpty() && tokens[0].type == STT_WS) tokens.pop_front();
 
   return tokens;
 }

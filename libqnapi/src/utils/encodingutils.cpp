@@ -155,10 +155,16 @@ QString EncodingUtils::detectBufferEncoding(const QByteArray &buffer) const {
   Q_UNUSED(utf8Decoded);
   if (!utf8Decoder.hasError()) return "UTF-8";
 
+  // UTF-8 has just been ruled out, so it is no candidate here, and a file with
+  // no Polish letters at all - English or Czech subtitles with "…" or "é" -
+  // falls back to windows-1250 rather than to the one encoding known to be
+  // wrong. Guessing UTF-8 there turned every such byte into U+FFFD for good,
+  // once the subtitles were written back.
   int bestMatch = 0;
-  QString from;
+  QString from = "windows-1250";
 
   foreach (QString codec, codecs) {
+    if (codec == "UTF-8") continue;
     const QString text = decode(codec, buffer).value();
 
     QStringList chars = QString::fromUtf8("ą/ś/ż/ć/ń/ł/ó/ę").split("/");

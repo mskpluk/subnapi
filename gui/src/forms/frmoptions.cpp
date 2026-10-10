@@ -429,7 +429,11 @@ void frmOptions::readConfig(const QNapiConfig &config) {
 
   int formatIdx = 1;
   foreach (QString format, subtitleFormatsRegistry->listFormatNames()) {
-    if (config.postProcessingConfig().subFormat() == format) {
+    // Case-insensitive, as the formats registry is: the stored default is
+    // "srt", the name on the list "SRT". An exact match left the box on "keep
+    // the original", and pressing OK then saved that, switching conversion off.
+    if (config.postProcessingConfig().subFormat().compare(
+            format, Qt::CaseInsensitive) == 0) {
       ui.cbSubFormat->setCurrentIndex(formatIdx);
     }
     ++formatIdx;

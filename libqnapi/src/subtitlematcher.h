@@ -34,6 +34,7 @@ class SubtitleMatcher : public QObject {
 
  private:
   QString selectTargetExtension(QFileInfo subtitlesTmpFileInfo) const;
+  QString detectFormat(const QString &subtitlesFilePath) const;
   QString constructSubtitlePath(QString targetMovieFilePath,
                                 QString targetExtension,
                                 QString baseSuffix = "") const;

@@ -68,7 +68,9 @@ frmConvert::frmConvert(QWidget *parent, Qt::WindowFlags f)
     targetFormat = subtitleFormatsRegistry->listFormatNames().first();
   } else {
     targetFormat = ppConfig.subFormat();
-    ui.cbTargetFormat->setCurrentText(targetFormat);
+    // MatchFixedString is case-insensitive: the stored "srt" is listed as "SRT".
+    const int index = ui.cbTargetFormat->findText(targetFormat, Qt::MatchFixedString);
+    if (index >= 0) ui.cbTargetFormat->setCurrentIndex(index);
   }
 
   if (!ppConfig.subExtension().isEmpty()) {

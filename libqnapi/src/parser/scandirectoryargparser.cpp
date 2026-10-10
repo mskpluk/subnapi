@@ -16,15 +16,19 @@
 #include "qnapicommand.h"
 
 #include <QFileInfo>
+#include <QUrl>
 
 ScanDirectoryArgParser::ScanDirectoryArgParser() {}
 
 QVariant ScanDirectoryArgParser::parse(const QStringList& args,
                                        const QNapiConfig& config) const {
   foreach (QString arg, args) {
-    if (QFileInfo(arg).isDir()) {
+    // subnapi-scan.desktop passes %U, so a folder can arrive as a file:// URL.
+    const QString path =
+        arg.startsWith("file://") ? QUrl(arg).toLocalFile() : arg;
+    if (QFileInfo(path).isDir()) {
       return QVariant::fromValue(ParsedCommand{
-          config, QVariant::fromValue(QNapiCommand::ScanDirectory{arg})});
+          config, QVariant::fromValue(QNapiCommand::ScanDirectory{path})});
     }
   }
 

@@ -15,6 +15,7 @@
 #include "console.h"
 
 #include <iostream>
+#include <string>
 
 Console::Console(bool isQuiet) : isQuiet(isQuiet) {}
 
@@ -52,12 +53,17 @@ int Console::inputNumber(const QString& message, int min, int max) const {
 
   while (!ok) {
     printOrdinary(message);
-    char line[16];
-    std::cin.getline(line, 16);
-    number = QString(line).toInt(&ok);
+    std::string line;
+    // No more input - stdin from /dev/null in a script, or Ctrl+D - counts as
+    // the lowest choice, which the callers take as "skip". Clearing the error
+    // and asking again would loop forever at full CPU.
+    if (!std::getline(std::cin, line)) {
+      printLine("");
+      return min;
+    }
+    number = QString::fromStdString(line).trimmed().toInt(&ok);
     if (!ok) {
       printLineWarning(tr("You must enter a number!"));
-      std::cin.clear();
     } else if (number < min || number > max) {
       ok = false;
       printLineWarning(

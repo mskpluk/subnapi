@@ -18,7 +18,6 @@
 #include <QNetworkRequest>
 #include <QProcess>
 #include <QUrl>
-#include <QUrlQuery>
 
 SubtitleDownloadEngineMetadata Napisy24DownloadEngine::metadata =
     SubtitleDownloadEngineMetadata(
@@ -78,16 +77,23 @@ bool Napisy24DownloadEngine::lookForSubtitles(QString lang) {
 
   auto credentials = getCredentials();
 
-  QUrlQuery params(url);
-  params.addQueryItem("postAction", "CheckSub");
-  params.addQueryItem("ua", credentials.first);
-  params.addQueryItem("ap", credentials.second);
-  params.addQueryItem("fh", checkSum);
-  params.addQueryItem("fs", QString::number(fileSize));
-  params.addQueryItem("fn", QFileInfo(movie).fileName());
-  // API N24 ignoruje ten parametr; jeśli nie ma napisów w żądanym języku, to i
-  // tak zwraca napisy w jęz. polskim params.addQueryItem("nl", lang);
-  QByteArray data = params.query().toUtf8();
+  // Encoded by hand rather than through QUrlQuery, which leaves '+' as it is -
+  // and a form body reads '+' as a space, so a password "a+b" arrived as "a b".
+  const QList<QPair<QString, QString>> params = {
+      {"postAction", "CheckSub"},
+      {"ua", credentials.first},
+      {"ap", credentials.second},
+      {"fh", checkSum},
+      {"fs", QString::number(fileSize)},
+      {"fn", QFileInfo(movie).fileName()},
+      // API N24 ignoruje parametr "nl"; jeśli nie ma napisów w żądanym
+      // języku, to i tak zwraca napisy w jęz. polskim.
+  };
+  QByteArray data;
+  for (const auto &param : params) {
+    if (!data.isEmpty()) data += '&';
+    data += param.first.toUtf8() + '=' + QUrl::toPercentEncoding(param.second);
+  }
 
   SyncHTTP http;
   QNetworkRequest req(url);
@@ -165,7 +171,9 @@ bool Napisy24DownloadEngine::unpack(QUuid id) {
 
   if (subFileName.isEmpty()) return false;
 
-  subtitlesTmp = tmpPath + "/" + subFileName;
+  // `7z e` drops the directories inside the archive, so a file listed as
+  // "Movie/Movie.srt" lands in tmpPath as plain "Movie.srt".
+  subtitlesTmp = tmpPath + "/" + QFileInfo(subFileName).fileName();
   if (QFile::exists(subtitlesTmp)) QFile::remove(subtitlesTmp);
 
   bool unpacked =

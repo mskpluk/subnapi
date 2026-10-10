@@ -73,6 +73,10 @@ void QNapi::checksum() {
 bool QNapi::lookForSubtitles(QString lang, QString engine) {
   bool result = false;
 
+  // No language is not "any language": OpenSubtitles reads an empty
+  // sublanguageid as all of them. A backup language set to "None" lands here.
+  if (lang.isEmpty()) return false;
+
   if (engine.isEmpty()) {
     foreach (QSharedPointer<SubtitleDownloadEngine> e, enginesList) {
       e->setMoviePath(movie);

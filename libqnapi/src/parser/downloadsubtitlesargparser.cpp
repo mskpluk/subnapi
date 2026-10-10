@@ -15,6 +15,7 @@
 #include "downloadsubtitlesargparser.h"
 #include "qnapicommand.h"
 #include <QFileInfo>
+#include <QUrl>
 
 DownloadSubtitlesArgParser::DownloadSubtitlesArgParser() {}
 
@@ -34,10 +35,12 @@ QVariant DownloadSubtitlesArgParser::parse(const QStringList& args,
       continue;
     }
 
+    // The desktop file passes %U, so a name with a space or a Polish letter
+    // arrives percent-encoded ("M%C3%B3j%20film.mkv"); QUrl decodes it.
     if (arg.startsWith("file://")) {
-      arg.remove(0, 7);
-      if (QFileInfo(arg).isFile()) {
-        filePaths << arg;
+      const QString path = QUrl(arg).toLocalFile();
+      if (QFileInfo(path).isFile()) {
+        filePaths << path;
         continue;
       }
     }

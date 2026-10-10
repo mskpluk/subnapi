@@ -62,6 +62,7 @@ bool findSubtitles(const Console& c, const QNapiConfig& config, QNapi& napi) {
       c.printLineOrdinary(
           tr("Searching for subtitles [%1] (%2)...").arg(lang, e));
       found = napi.lookForSubtitles(lang, e) || found;
+      if (langBackup.isEmpty()) continue;
       c.printLineOrdinary(
           tr("Searching for subtitles in alternative language [%1] (%2)...")
               .arg(langBackup, e));

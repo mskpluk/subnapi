@@ -14,6 +14,7 @@
 
 #include "subtitlematcher.h"
 #include <QDir>
+#include <QFile>
 
 SubtitleMatcher::SubtitleMatcher(
     bool _noBackup, bool _isPostProcessingEnabled, QString _ppSubFormat,
@@ -59,14 +60,38 @@ QString SubtitleMatcher::selectTargetExtension(
 
   if (isPostProcessingEnabled) {
     if (!ppSubFormat.isEmpty() && ppSubExtension.isEmpty()) {
+      // Named after what the file really holds. When the conversion failed -
+      // frame-based subtitles and no frame rate to be had from the movie - the
+      // content is still in its old format, and calling it .srt hands the
+      // player a file it cannot read.
+      const QString actualFormat = detectFormat(subtitlesTmpFileInfo.filePath());
       targetExtension =
-          subtitleFormatsRegistry->select(ppSubFormat)->defaultExtension();
+          subtitleFormatsRegistry
+              ->select(actualFormat.isEmpty() ? ppSubFormat : actualFormat)
+              ->defaultExtension();
     } else if (!ppSubExtension.isEmpty()) {
       targetExtension = ppSubExtension;
     }
   }
 
   return targetExtension;
+}
+
+QString SubtitleMatcher::detectFormat(const QString &subtitlesFilePath) const {
+  QFile file(subtitlesFilePath);
+  if (!file.open(QIODevice::ReadOnly)) return QString();
+  // The detectors look at timestamps, which are ASCII in every encoding, and
+  // the first lines are enough - as for SubtitleConverter::detectFormat.
+  QStringList lines;
+  while (lines.size() < 15 && !file.atEnd()) {
+    QString line = QString::fromUtf8(file.readLine());
+    while (line.endsWith('\n') || line.endsWith('\r')) line.chop(1);
+    lines << line;
+  }
+  foreach (QString format, subtitleFormatsRegistry->listFormatNames()) {
+    if (subtitleFormatsRegistry->select(format)->detect(lines)) return format;
+  }
+  return QString();
 }
 
 QString SubtitleMatcher::constructSubtitlePath(QString targetMovieFilePath,

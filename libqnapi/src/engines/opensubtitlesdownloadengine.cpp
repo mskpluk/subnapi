@@ -23,7 +23,8 @@
 #include <QUrl>
 
 namespace OpenSubtitlesDownloadEngineConst {
-const QString openSubtitlesXmlRpcUrl = "http://api.opensubtitles.org/xml-rpc";
+// HTTPS: LogIn sends the account name and password in the request body.
+const QString openSubtitlesXmlRpcUrl = "https://api.opensubtitles.org/xml-rpc";
 
 // Subtitle files are fetched over plain HTTP rather than through the XML-RPC
 // DownloadSubtitles method. That method is not usable any more: for accounts
@@ -358,12 +359,13 @@ bool OpenSubtitlesDownloadEngine::download(QUuid id) {
   if (file.exists()) file.remove();
   if (!file.open(QIODevice::WriteOnly)) return false;
 
-  int r = file.write(subtitleContent);
+  // write() reports failure as -1, which a bool cast reads as success.
+  const bool written = file.write(subtitleContent) == subtitleContent.size();
   file.close();
 
   updateSubtitleInfo(s);
 
-  return (bool)r;
+  return written && !subtitleContent.isEmpty();
 }
 
 // download() now fetches the subtitle file itself rather than an archive, so

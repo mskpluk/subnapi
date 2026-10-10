@@ -20,21 +20,30 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QLocale>
+#include <QStandardPaths>
 
 namespace {
-// One-time migration for the qnapi -> subnapi rename: on Linux, QSettings
-// resolves IniFormat+UserScope+organization to $HOME/.config/<org>.ini, so
-// this mirrors that convention directly rather than re-deriving it via
-// QSettings. Copies (never moves) the old config so ~/.config/qnapi.ini is
-// left untouched for anyone still running the old qnapi build alongside
-// this one.
+// One-time migration for the qnapi -> subnapi rename. QSettings with
+// IniFormat + UserScope keeps <org>.ini in the XDG config directory, which is
+// $XDG_CONFIG_HOME when that is set - always so under Flatpak, where it points
+// into the sandbox - so the new file is looked for there, not in a hard-coded
+// ~/.config. The old QNapi file may be in either place: a native QNapi wrote
+// it to ~/.config, which a Flatpak still reaches through --filesystem=host.
+// Copies, never moves, so the old file is left for anyone still running QNapi.
 void migrateConfigFromQNapiIfNeeded() {
-  QString newConfigPath = QDir::homePath() + "/.config/subnapi.ini";
-  QString oldConfigPath = QDir::homePath() + "/.config/qnapi.ini";
+  const QString configDir =
+      QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+  const QString newConfigPath = configDir + "/subnapi.ini";
+  if (QFile::exists(newConfigPath)) return;
 
-  if (QFile::exists(newConfigPath) || !QFile::exists(oldConfigPath)) return;
-
-  QFile::copy(oldConfigPath, newConfigPath);
+  for (const QString& oldConfigPath :
+       {configDir + "/qnapi.ini", QDir::homePath() + "/.config/qnapi.ini"}) {
+    if (QFile::exists(oldConfigPath)) {
+      QDir().mkpath(configDir);
+      QFile::copy(oldConfigPath, newConfigPath);
+      return;
+    }
+  }
 }
 }  // namespace
 
