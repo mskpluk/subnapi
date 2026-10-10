@@ -59,13 +59,10 @@ void frmProgress::receiveRequest(const QString &request) {
 }
 
 void frmProgress::enqueueFile(const QString &filePath) {
-  static QMutex locker;
-  locker.lock();
   if (QFile::exists(filePath)) {
-    getThread.queue << filePath;
-    updateProgress(-1, getThread.queue.size(), -1);
+    getThread.enqueue(filePath);
+    updateProgress(-1, getThread.queueSize(), -1);
   }
-  locker.unlock();
 }
 
 void frmProgress::enqueueFiles(const QStringList &fileList) {
@@ -75,6 +72,11 @@ void frmProgress::enqueueFiles(const QStringList &fileList) {
 }
 
 bool frmProgress::download(const QNapiConfig &config) {
+  // Already running: the files just queued are picked up by this run, or by
+  // the follow-up downloadFinished() starts. Its configuration stays as it is;
+  // replacing it under the worker would be a data race.
+  if (getThread.isRunning()) return true;
+
   if (summary.isVisible()) {
     summary.close();
   }
@@ -95,7 +97,7 @@ bool frmProgress::download(const QNapiConfig &config) {
     return false;
   }
 
-  if (getThread.queue.isEmpty()) {
+  if (!getThread.hasQueuedFiles()) {
     QMessageBox::warning(
         0, tr("No files!"),
         tr("Can't download subtitles as no movie files specified!"));
@@ -159,17 +161,21 @@ void frmProgress::selectSubtitles(QString fileName,
 }
 
 void frmProgress::downloadFinished() {
+  // finished() arrives a moment before the thread stops counting as running.
+  // Only that thread can be about to end here, so this returns at once - and
+  // from here on download() can trust isRunning(). Not later: the summary
+  // below runs its own event loop, which may start a new run.
+  getThread.wait();
   hide();
 
-  QStringList queue = getThread.queue;
-  getThread.queue.clear();
+  const QStringList leftover = getThread.takeUnprocessed();
 
   mutex.lock();
   if (showSummary) {
     if (!getThread.criticalMessage.isEmpty()) {
       QMessageBox::critical(0, tr("Critical error!"),
                             getThread.criticalMessage);
-    } else if (queue.size() > 0 && !getThread.subStatusList.isEmpty()) {
+    } else if (!getThread.subStatusList.isEmpty()) {
       summary.setSummaryList(getThread.subStatusList);
       summary.exec();
     }
@@ -177,8 +183,22 @@ void frmProgress::downloadFinished() {
 
   if (closeRequested) close();
 
+  const bool stopped = closeRequested || getThread.wasAborted() ||
+                       !getThread.criticalMessage.isEmpty();
   mutex.unlock();
-  if (batchMode) qApp->quit();
+
+  // Files added after the worker had finished with the queue - from the tray
+  // or a second instance, a moment too late - get a run of their own instead
+  // of being dropped. Not after a cancel or an error, which stop everything.
+  if (!leftover.isEmpty() && !stopped) {
+    enqueueFiles(leftover);
+    if (download(getThread.config)) return;
+  }
+
+  // A file sent by a second instance while the summary was open has started a
+  // run of its own; quitting now would take it down unfinished. Its own
+  // downloadFinished() quits once it is done.
+  if (batchMode && !getThread.isRunning()) qApp->quit();
 }
 
 void frmProgress::closeEvent(QCloseEvent *event) {
@@ -244,38 +264,46 @@ void GetThread::subtitlesSelected(int idx) {
 void GetThread::run() {
   abort = false;
   criticalMessage.clear();
-  if (queue.size() <= 0) return;
+  {
+    QMutexLocker lock(&queueMutex);
+    processed = 0;
+    if (queue.isEmpty()) return;
+  }
 
   napiSuccess = napiFail = 0;
   subStatusList.clear();
 
   QNapi napi(config, specificEngine);
 
-  emit progressChange(0, queue.size(), 0.0f);
+  emit progressChange(0, queueSize(), 0.0f);
 
   QString language = config.generalConfig().language();
   QString languageBackup = config.generalConfig().backupLanguage();
 
-  for (int i = 0; i < queue.size(); i++) {
+  // Files are taken one at a time, so one added while this runs is picked up
+  // in the same run.
+  QString file;
+  int total = 0;
+  for (int i = 0; takeFile(i, &file, &total); i++) {
     ABORT_POINT
 
-    QFileInfo fi(queue[i]);
+    QFileInfo fi(file);
     emit fileNameChange(fi.fileName());
 
-    napi.setMoviePath(queue[i]);
+    napi.setMoviePath(file);
 
-    emit progressChange(i, queue.size(), 0.1f);
+    emit progressChange(i, total, 0.1f);
     emit actionChange(tr("Checking permissions of the video directory..."));
 
     if (!napi.checkWritePermissions()) {
       emit criticalError(tr("No permission to write to the directory '%1'!")
-                             .arg(QFileInfo(queue[i]).path()));
+                             .arg(QFileInfo(file).path()));
       return;
     }
 
     napi.clearSubtitlesList();
 
-    emit progressChange(i, queue.size(), 0.3f);
+    emit progressChange(i, total, 0.3f);
     emit actionChange(tr("Calculating checksum of the file..."));
 
     napi.checksum();
@@ -287,7 +315,7 @@ void GetThread::run() {
 
     if (sp == SP_SEARCH_ALL_WITH_BACKUP_LANG) {
       foreach (QString e, napi.listLoadedEngines()) {
-        emit progressChange(i, queue.size(), 0.4f);
+        emit progressChange(i, total, 0.4f);
         emit actionChange(
             tr("Searching for subtitles [%1] (%2)...").arg(language, e));
         found = napi.lookForSubtitles(language, e) || found;
@@ -304,7 +332,7 @@ void GetThread::run() {
       }
     } else {
       foreach (QString e, napi.listLoadedEngines()) {
-        emit progressChange(i, queue.size(), 0.4f);
+        emit progressChange(i, total, 0.4f);
         emit actionChange(
             tr("Searching for subtitles [%1] (%2)...").arg(language, e));
         found = napi.lookForSubtitles(language, e) || found;
@@ -318,7 +346,7 @@ void GetThread::run() {
 
       if (!found && !languageBackup.isEmpty()) {
         foreach (QString e, napi.listLoadedEngines()) {
-          emit progressChange(i, queue.size(), 0.45f);
+          emit progressChange(i, total, 0.45f);
           emit actionChange(
               tr("Searching for subtitles in alternative language [%1] (%2)...")
                   .arg(languageBackup, e));
@@ -333,13 +361,13 @@ void GetThread::run() {
 
     if (!found) {
       ++napiFail;
-      subStatusList << SubtitleInfo::fromFailed(queue[i], napi.error());
+      subStatusList << SubtitleInfo::fromFailed(file, napi.error());
       continue;
     }
 
     // jesli mozna i potrzeba, listujemy dostepne napisy
     if (napi.needToShowList()) {
-      emit selectSubtitles(QFileInfo(queue[i]).fileName(),
+      emit selectSubtitles(QFileInfo(file).fileName(),
                            napi.listSubtitles());
 
       waitForDlg.lock();
@@ -353,46 +381,46 @@ void GetThread::run() {
 
     if (selIdx == -1) {
       ++napiFail;
-      subStatusList << SubtitleInfo::fromFailed(queue[i]);
+      subStatusList << SubtitleInfo::fromFailed(file);
       continue;
     }
 
-    emit progressChange(i, queue.size(), 0.5);
+    emit progressChange(i, total, 0.5);
     emit actionChange(tr("Downloading subtitles file..."));
 
     if (!napi.download(selIdx)) {
       ABORT_POINT
 
       ++napiFail;
-      subStatusList << SubtitleInfo::fromFailed(queue[i]);
+      subStatusList << SubtitleInfo::fromFailed(file);
       continue;
     }
 
     ABORT_POINT
 
-    emit progressChange(i, queue.size(), 0.65f);
+    emit progressChange(i, total, 0.65f);
     emit actionChange(tr("Unpacking subtitles file..."));
 
     if (!napi.unpack(selIdx)) {
       ++napiFail;
-      subStatusList << SubtitleInfo::fromFailed(queue[i]);
+      subStatusList << SubtitleInfo::fromFailed(file);
       continue;
     }
 
     if (napi.ppEnabled()) {
-      emit progressChange(i, queue.size(), 0.8f);
+      emit progressChange(i, total, 0.8f);
       emit actionChange(tr("Post-processing subtitles..."));
       napi.postProcessSubtitles();
     }
 
-    emit progressChange(i, queue.size(), 0.9f);
+    emit progressChange(i, total, 0.9f);
     emit actionChange(tr("Adjusting subtitles..."));
 
     if (!napi.matchSubtitles()) {
       ABORT_POINT
 
       ++napiFail;
-      subStatusList << SubtitleInfo::fromFailed(queue[i]);
+      subStatusList << SubtitleInfo::fromFailed(file);
 
       emit criticalError(tr("Could not adjust subtitles!"));
       return;
@@ -403,8 +431,40 @@ void GetThread::run() {
 
     napi.cleanup();
 
-    emit progressChange(i, queue.size(), 1.0f);
+    emit progressChange(i, total, 1.0f);
   }
 
-  emit progressChange(queue.size() - 1, queue.size(), 1);
+  emit progressChange(total - 1, total, 1);
+}
+
+void GetThread::enqueue(const QString &file) {
+  QMutexLocker lock(&queueMutex);
+  queue << file;
+}
+
+bool GetThread::hasQueuedFiles() const {
+  QMutexLocker lock(&queueMutex);
+  return !queue.isEmpty();
+}
+
+int GetThread::queueSize() const {
+  QMutexLocker lock(&queueMutex);
+  return queue.size();
+}
+
+bool GetThread::takeFile(int i, QString *file, int *total) {
+  QMutexLocker lock(&queueMutex);
+  if (i >= queue.size()) return false;
+  *file = queue.at(i);
+  *total = queue.size();
+  processed = i + 1;
+  return true;
+}
+
+QStringList GetThread::takeUnprocessed() {
+  QMutexLocker lock(&queueMutex);
+  const QStringList rest = queue.mid(processed);
+  queue.clear();
+  processed = 0;
+  return rest;
 }

@@ -16,6 +16,7 @@
 #define __FRMPROGRESS__H__
 
 #include <QMutex>
+#include <QRecursiveMutex>
 
 #include "ui_frmprogress.h"
 
@@ -54,7 +55,26 @@ class GetThread : public QNapiThread {
 
   void run();
 
+  // The queue is shared with the GUI thread, which keeps adding files while
+  // run() works through it, so it is only ever touched under queueMutex.
+  void enqueue(const QString &file);
+  bool hasQueuedFiles() const;
+  int queueSize() const;
+  // Files run() has not reached - added after it had finished with the queue,
+  // or left behind by a cancel. Empties the queue.
+  QStringList takeUnprocessed();
+  bool wasAborted() const { return abort; }
+
+ private:
+  // The file at position i and the queue's current length; false once i is
+  // past the end, which is also the moment the worker stops taking files.
+  bool takeFile(int i, QString *file, int *total);
+
+  mutable QMutex queueMutex;
   QStringList queue;
+  int processed = 0;
+
+ public:
   Maybe<QString> specificEngine;
   QList<SubtitleInfo> subStatusList;
   int napiSuccess, napiFail;
@@ -70,9 +90,13 @@ class frmProgress : public QWidget {
  public:
   frmProgress(QWidget *parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
 
-  void clearSpecificEngine() { getThread.setSpecificEngine(nothing()); }
+  // Ignored while a download runs: the worker reads the engine once, as it
+  // starts, and writing it under its feet would be a data race.
+  void clearSpecificEngine() {
+    if (!getThread.isRunning()) getThread.setSpecificEngine(nothing());
+  }
   void setSpecificEngine(QString engine) {
-    getThread.setSpecificEngine(just(engine));
+    if (!getThread.isRunning()) getThread.setSpecificEngine(just(engine));
   }
 
   void setBatchMode(bool value) { batchMode = value; }
@@ -101,7 +125,10 @@ class frmProgress : public QWidget {
   frmSummary summary;
 
   bool batchMode, showSummary, closeRequested;
-  QMutex mutex;
+  // Recursive: downloadFinished() holds it across the summary dialog, whose
+  // event loop can run closeEvent() or another downloadFinished() on this same
+  // thread, and a plain mutex would deadlock there.
+  QRecursiveMutex mutex;
 };
 
 #endif

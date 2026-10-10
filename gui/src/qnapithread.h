@@ -17,6 +17,8 @@
 
 #include <QThread>
 
+#include <atomic>
+
 class QNapiThread : public QThread {
   Q_OBJECT
  public:
@@ -24,7 +26,9 @@ class QNapiThread : public QThread {
   void requestAbort() { abort = true; }
 
  protected:
-  bool abort;
+  // Set from the GUI thread, read by the worker: atomic, or the write is a
+  // data race the compiler may hoist out of the worker's loop.
+  std::atomic<bool> abort;
 };
 
 #endif
