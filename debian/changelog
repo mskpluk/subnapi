@@ -1,3 +1,11 @@
+subnapi (0.5.8-1) unstable; urgency=medium
+
+  * Opening many files at once finds subtitles for all of them, not only the
+    first: NapiProjekt requests are now spaced 10 seconds apart, as the
+    server answers closer ones as if there were no subtitles.
+
+ -- mskpluk <mskpluk@users.noreply.github.com>  Sun, 11 Oct 2026 09:17:35 +0100
+
 subnapi (0.5.7-1) unstable; urgency=medium
 
   * Files added while subtitles are downloading - from the tray, the file

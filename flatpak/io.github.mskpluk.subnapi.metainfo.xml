@@ -36,6 +36,14 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.8" date="2026-10-11">
+      <description>
+        <p>
+          Subtitles are found for every file when many are opened at once,
+          not only for the first one.
+        </p>
+      </description>
+    </release>
     <release version="0.5.7" date="2026-10-10">
       <description>
         <p>
