@@ -20,13 +20,37 @@
 #include <cmath>
 
 #include <QCryptographicHash>
+#include <QElapsedTimer>
+#include <QMutex>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcess>
 #include <QStringConverter>
 #include <QStringDecoder>
+#include <QThread>
 #include <QXmlStreamReader>
 #include <QUrl>
+
+namespace {
+// NapiProjekt does not refuse requests that come too close together: it
+// answers them exactly as it answers for subtitles that do not exist. Opening
+// a whole season at once found the first episode and nothing else. Measured in
+// October 2026: about 6.5 s between requests was still too close, 8 s was
+// enough; 10 s leaves a margin. Kept for the whole process, so files added
+// while a download runs - or a second run started right after - wait too.
+constexpr qint64 kMinRequestIntervalMs = 10000;
+QMutex requestSpacingMutex;
+QElapsedTimer lastRequest;  // invalid until the first request
+
+void waitForRequestSlot() {
+  QMutexLocker lock(&requestSpacingMutex);
+  if (lastRequest.isValid()) {
+    const qint64 wait = kMinRequestIntervalMs - lastRequest.elapsed();
+    if (wait > 0) QThread::msleep(static_cast<unsigned long>(wait));
+  }
+  lastRequest.start();
+}
+}  // namespace
 
 namespace NapiProjektDownloadEngineConsts {
 const unsigned long NAPI_10MB = 10485760;
@@ -112,6 +136,7 @@ Maybe<QString> NapiProjektDownloadEngine::downloadByLangAndChecksum(
 
   QUrl url(urlTxt);
 
+  waitForRequestSlot();
   SyncHTTP http;
   QNetworkReply *reply = http.syncGet(QNetworkRequest(url));
 
