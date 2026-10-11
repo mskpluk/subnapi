@@ -31,6 +31,12 @@ class SubtitlePostProcessor {
   void perform(const QString& movieFilePath,
                const QString& subtitleFilePath) const;
 
+  // Drops every subtitle that mentions any of the words, whole: a match marks
+  // the subtitle as advertising, so in SRT its other lines, number and timing
+  // go with it, and in one-line formats the line goes. Public for the tests.
+  static QStringList removeLinesContainingWords(const QStringList& lines,
+                                                const QStringList& words);
+
  private:
   bool ppReplaceDiacriticsWithASCII(const QString& subtitleFilePath) const;
   bool ppChangeSubtitlesEncoding(const QString& subtitleFilePath,

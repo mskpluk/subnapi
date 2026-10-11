@@ -155,21 +155,7 @@ bool SubtitlePostProcessor::ppRemoveLinesContainingWords(
   if (!lines.isEmpty() && lines.last().isEmpty() && endedWithLineBreak) {
     lines.removeLast();
   }
-
-  // Filter lines
-  QStringList filtered;
-  foreach (QString line, lines) {
-    bool found = false;
-    foreach (QString word, wordList) {
-      if (line.contains(word, Qt::CaseInsensitive)) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      filtered << line;
-    }
-  }
+  const QStringList filtered = removeLinesContainingWords(lines, wordList);
 
   // Write back with same encoding
   QString outContent = filtered.join(lineEnding);
@@ -184,4 +170,83 @@ bool SubtitlePostProcessor::ppRemoveLinesContainingWords(
   f.close();
 
   return true;
+}
+
+namespace {
+bool mentionsAny(const QString& text, const QStringList& words) {
+  for (const QString& word : words) {
+    if (text.contains(word, Qt::CaseInsensitive)) return true;
+  }
+  return false;
+}
+}  // namespace
+
+QStringList SubtitlePostProcessor::removeLinesContainingWords(
+    const QStringList& lines, const QStringList& words) {
+  static const QRegularExpression srtTiming(
+      QStringLiteral("^\\s*\\d{1,2}:\\d{2}:\\d{2}[,.]\\d{1,3}\\s*-->"));
+
+  bool isSrt = false;
+  for (const QString& line : lines) {
+    if (srtTiming.match(line).hasMatch()) {
+      isSrt = true;
+      break;
+    }
+  }
+
+  QStringList result;
+
+  // MicroDVD, MPL2, TMPlayer: one subtitle per line, so the line goes.
+  if (!isSrt) {
+    for (const QString& line : lines) {
+      if (!mentionsAny(line, words)) result << line;
+    }
+    return result;
+  }
+
+  // SRT: blocks separated by empty lines - a number, a timing line, the text.
+  // A match anywhere in the text takes the whole block, so an advertisement
+  // spread over two lines needs only one of them on the list and leaves no
+  // empty subtitle behind. The numbers that remain are counted again.
+  QList<QStringList> blocks;
+  QStringList current;
+  for (const QString& line : lines) {
+    if (line.trimmed().isEmpty()) {
+      if (!current.isEmpty()) blocks << current;
+      current.clear();
+    } else {
+      current << line;
+    }
+  }
+  if (!current.isEmpty()) blocks << current;
+
+  int number = 0;
+  for (const QStringList& block : blocks) {
+    int timing = -1;
+    for (int i = 0; i < block.size() && i < 2; ++i) {
+      if (srtTiming.match(block.at(i)).hasMatch()) timing = i;
+    }
+    if (timing < 0) {
+      // Not a subtitle at all; filtered line by line as before.
+      QStringList kept;
+      for (const QString& line : block) {
+        if (!mentionsAny(line, words)) kept << line;
+      }
+      if (!kept.isEmpty()) {
+        if (!result.isEmpty()) result << QString();
+        result << kept;
+      }
+      continue;
+    }
+    bool advertising = false;
+    for (int i = timing + 1; i < block.size() && !advertising; ++i) {
+      advertising = mentionsAny(block.at(i), words);
+    }
+    if (advertising) continue;
+
+    if (!result.isEmpty()) result << QString();
+    if (timing == 1) result << QString::number(++number);
+    result << block.mid(timing);
+  }
+  return result;
 }
