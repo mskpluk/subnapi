@@ -1,3 +1,11 @@
+subnapi (0.5.9-1) unstable; urgency=medium
+
+  * Removing advertising lines takes out the whole subtitle a word on the
+    list was found in, number and timing included, so an advertisement over
+    two lines needs only one of them on the list.
+
+ -- mskpluk <mskpluk@users.noreply.github.com>  Sun, 11 Oct 2026 11:05:32 +0100
+
 subnapi (0.5.8-1) unstable; urgency=medium
 
   * Opening many files at once finds subtitles for all of them, not only the

@@ -36,6 +36,14 @@
   <url type="bugtracker">https://github.com/mskpluk/subnapi/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.5.9" date="2026-10-11">
+      <description>
+        <p>
+          Removing advertising lines takes out the whole subtitle a word on
+          the list was found in, not only the matching line.
+        </p>
+      </description>
+    </release>
     <release version="0.5.8" date="2026-10-11">
       <description>
         <p>
